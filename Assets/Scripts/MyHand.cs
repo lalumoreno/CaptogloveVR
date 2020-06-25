@@ -534,10 +534,10 @@ public class MyHand: MyModule
 
 		if (GetIsInitialized())
 		{
-			if (sensorVal[nIndexPos] > triggers[nIndexPos] &&
-			sensorVal[nMiddlePos] > triggers[nMiddlePos] &&
-			sensorVal[nRingPos] < triggers[nRingPos] &&
-			sensorVal[nPinkyPos] < triggers[nPinkyPos])
+			if (sensorVal[nIndexPos]	> triggers[nIndexPos] &&
+				sensorVal[nMiddlePos]	> triggers[nMiddlePos] &&
+				sensorVal[nRingPos]		< triggers[nRingPos] &&
+				sensorVal[nPinkyPos]	< triggers[nPinkyPos])
 			{
 				bRet = true;
 			}
@@ -546,9 +546,26 @@ public class MyHand: MyModule
 		return bRet;
 
 	}
-		
-		//Utility
-		private static string FloatsToString(float[] value) {
+	public bool isNumber3()
+	{
+		bool bRet = false;
+
+		if (GetIsInitialized())
+		{
+			if (sensorVal[nIndexPos]	> triggers[nIndexPos] &&
+				sensorVal[nMiddlePos]	> triggers[nMiddlePos] &&
+				sensorVal[nRingPos]		> triggers[nRingPos] &&
+				sensorVal[nPinkyPos]	< triggers[nPinkyPos])
+				{
+					bRet = true;
+				}
+		}
+
+		return bRet;
+
+	}
+	//Utility
+	private static string FloatsToString(float[] value) {
 			string result = "";
 			var index = 0;
 			foreach (var element in value) {

@@ -13,8 +13,8 @@ public class button : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        pressedPos = new Vector3(11.11f, 9, 20.22f);
-        releasedPos = new Vector3(11.11f, 9, 19.48f);
+        pressedPos = new Vector3(-11.88f, 9, 20.06f);
+        releasedPos = new Vector3(-11.88f, 9, 19.48f);
         doorDownPos = new Vector3(-6.91f, 7.94f, 18.96f);
         doorUpPos = new Vector3(-6.91f, 12.68f, 18.96f);
     }
