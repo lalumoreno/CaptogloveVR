@@ -122,7 +122,7 @@ public class MainRightHand : MonoBehaviour
 			leverRenderer.material.SetColor("_Color", Color.green);
 			myCatchObject = myLever;
 		}
-		else if (other.tag == "Player")
+		else if (other.tag == "Light")
 		{
 			Debug.Log("OnTriggerEnter!!");
 			blights = true;
