@@ -1,7 +1,5 @@
 ﻿using UnityEngine;
 
-using Arm;
-
 public class MainRightArm : MonoBehaviour
 {
 	public Transform transRA;
@@ -18,7 +16,7 @@ public class MainRightArm : MonoBehaviour
 
 		//Do all of this in interface for Unity - values in screen 
 		RightArm = new MyArm(2469, true);
-		RightArm.SetTransform(transRA, MyModule.ModuleAxis.AXIS_Y, MyModule.ModuleAxis.AXIS_Z, MyModule.ModuleAxis.AXIS_X);
+		RightArm.SetArmTransform(transRA, Module.eModuleAxis.AXIS_Y, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_X);
 		RightArm.Pitch(-90, 90);
 		RightArm.Yaw(0, -180);
 
@@ -33,10 +31,11 @@ public class MainRightArm : MonoBehaviour
 
 	void OnGUI()
 	{
-		if (RightArm.sensorRead)
+		/*
+		if (RightArm._bPropertiesRead)
 		{
 			GUI.Label(new Rect(0,0+20f, 200f, 200f), "Right Arm ready", style);
-		}
+		}*/
 	}
 
 	private void OnDestroy()
