@@ -15,10 +15,8 @@ public class MainRightArm : MonoBehaviour
 		style.normal.textColor = Color.black;
 
 		//Do all of this in interface for Unity - values in screen 
-		RightArm = new MyArm(2469, true);
-		RightArm.SetArmTransform(transRA, Module.eModuleAxis.AXIS_Y, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_X);
-		RightArm.Pitch(-90, 90);
-		RightArm.Yaw(0, -180);
+		RightArm = new MyArm(2469, MyArm.eArmType.TYPE_RIGHT_FOREARM);
+		RightArm.SetArmTransform(transRA, Module.eModuleAxis.AXIS_Y, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_X);		
 
 		RightArm.Start();
 	}
@@ -26,7 +24,7 @@ public class MainRightArm : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-		RightArm.Wirst();
+		RightArm.MoveArm();
 	}
 
 	void OnGUI()

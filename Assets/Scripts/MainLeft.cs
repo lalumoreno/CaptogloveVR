@@ -20,11 +20,11 @@ public class MainLeft : MonoBehaviour
 
 		LeftHand = new  MyHand(2492, MyHand.eHandType.TYPE_RIGHT_HAND);
 		LeftHand.SetHandTransform(transLH, Module.eModuleAxis.AXIS_X, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_Y); //pitch, yaw, roll
-		LeftHand.SetFingerTransform(transThuL,transIndL,transMidL,transRinL, transPinL, Module.eModuleAxis.AXIS_X, 3);
+		LeftHand.SetFingerTransform(transThuL,transIndL,transMidL,transRinL, transPinL);
 	
 /*
 		 LeftArm  = new MyArm(26, false); 
-		 LeftArm.SetHandTransform(transLA, SetModule.eModuleAxis.AXIS_Z, SetModule.eModuleAxis.AXIS_X, SetModule.eModuleAxis.AXIS_Y); 
+		 LeftArm.SetHandTransform(transLA, InitModule.eModuleAxis.AXIS_Z, InitModule.eModuleAxis.AXIS_X, InitModule.eModuleAxis.AXIS_Y); 
 		 */
 		LeftHand.Start();
 		//RightArm.Start();
@@ -35,20 +35,20 @@ public class MainLeft : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-		LeftHand.Wirst();
-		LeftHand.Fingers();
+		LeftHand.MoveHand();
+		LeftHand.MoveFingers();
 
-		if (LeftHand.isPressed())
+		if (LeftHand.IsSensorPressed())
 		{
 			Debug.Log("Left Button pressed");
 		}
 
-		if (LeftHand.isCatch())
+		if (LeftHand.IsHandClosed())
 		{
 			Debug.Log("Left Hand is closed");
 		}
 
-		if (LeftHand.isNumber1())
+		if (LeftHand.FingerGesture1())
 		{
 			Debug.Log("Left Hand is number 1");
 		}

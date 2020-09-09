@@ -50,7 +50,7 @@ public class MainRightHand : MonoBehaviour
 
         RightHand = new MyHand(2443, MyHand.eHandType.TYPE_RIGHT_HAND);        
         RightHand.SetHandTransform(transRH, Module.eModuleAxis.AXIS_X, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_Y);
-        RightHand.SetFingerTransform(transThuR, transIndR, transMidR, transRinR, transPinR, Module.eModuleAxis.AXIS_X, 3);
+        RightHand.SetFingerTransform(transThuR, transIndR, transMidR, transRinR, transPinR);
         RightHand.EnableLog();
 
         RightHand.Start(); //To start, the model is not needed 		
@@ -59,10 +59,10 @@ public class MainRightHand : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        RightHand.Wirst();
-        RightHand.Fingers();
+        RightHand.MoveHand();
+        RightHand.MoveFingers();
 
-        if (RightHand.isCatch() && myCatchObject != null)
+        if (RightHand.IsHandClosed() && myCatchObject != null)
         {
             Debug.Log("Right Hand is closed");
             //RightHand.CatchObject(myLever);			
@@ -148,7 +148,7 @@ public class MainRightHand : MonoBehaviour
     void OnGUI()
     {
         /*
-        if (RightHand.GetPropertiesReady())
+        if (RightHand.GetPropertiesRead())
         {
             GUI.Label(new Rect(0, 0, 200f, 200f), "Right Hand ready", style);
         }

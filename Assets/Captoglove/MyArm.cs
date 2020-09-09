@@ -1,103 +1,227 @@
 using UnityEngine;
-using System.ComponentModel; //needed for PropertyChangedEventArgs
-using System.Linq; //Needed for String List 
-
 using GSdkNet.Board;
-using System;
 
+/* 
+    Class: MyArm
+    Handles Captoglove module configured as forearm sensor.
+*/
 public class MyArm : Module
 {
-    private peModuleType _enArmType;
+    /* 
+        Enum: eArmType
+        List of possible ways to use Captoglove module with this class:
 
-    private Transform model;
-    private int BaseRotation;
-
-    private float UnityMax, UnityMin;
-    public float pitchA, pitchB, yawA, yawB;
-
-    private eModuleAxis _ePitchAxis, _eYawAxis, _eRollAxis;
-
-    private Transform _tArmTransform;
-    private float pfWirstXAngle, pfWirstYAngle, pfWirstZAngle;
-    //Constructor 
-    public MyArm(int nID, bool rightArm)
+        TYPE_RIGHT_FOREARM - As right forearm sensor
+        TYPE_LEFT_FOREARM - As left forearm sensor       
+    */
+    public enum eArmType
     {
-
-        _enArmType = peModuleType.TYPE_LEFT_ARM;
-
-        if (rightArm)
-        {
-            _enArmType = peModuleType.TYPE_RIGHT_ARM;
-        }
-
-        SetModule(nID, _enArmType);
-
+        TYPE_RIGHT_FOREARM,
+        TYPE_LEFT_FOREARM
     }
 
+    private eArmType _eArmType;
+    private eModuleAxis _ePitchAxis, _eYawAxis, _eRollAxis;
 
-    /* Function: SetArmTransform    
-    Attaches Captoglove module movement to object transform.     
+    private float _fArmXAngle, _fArmYAngle, _fArmZAngle;    
+    private float _fPitchVarA, _fPitchVarB, _fYawVarA, _fYawVarB;    
 
-    Parameters:
-    tHandObject - 3D Arm object
-    ePitch - Object axis for pitch movement 
-    eYaw   - Object axis for yaw movement 
-    eRoll  - Object axis for roll movement 
+    private Transform _tArm = null;
 
-    Returns: 
-    0  - Success
-    -1 - Failure
+    /* 
+        Constructor: MyArm
+        Initializes variables for Captoglove module configuration
 
-    Notes: 
-    Place the object horizontally in the scene before assigning it in this function.
+        Parameters:
+        nID - Captoglove ID (4 digits number)
+        etype - Captoglove use mode
+
+        Example:
+        --- Code
+        MyArm RightArm = new MyArm(2469, MyArm.eArmType.TYPE_RIGHT_FOREARM);
+        ---
     */
-    public int SetArmTransform(Transform tHandObject, eModuleAxis ePitch, eModuleAxis eYaw, eModuleAxis eRoll)
+    public MyArm(int nID, eArmType eType)
     {
-        if (tHandObject == null)
+        SetArmType(eType);
+
+        if (eType == eArmType.TYPE_RIGHT_FOREARM)
+        {
+            InitModule(nID, Module.peModuleType.TYPE_RIGHT_ARM);
+        }
+        else
+        {
+            InitModule(nID, Module.peModuleType.TYPE_LEFT_ARM);            
+        }
+
+        SetDefaultRotLimits();
+    }
+
+    /* 
+        Function: SetArmType
+        Saves Captoglove module use mode
+
+        Parameters:
+        eType - Captoglove module use mode
+
+        Example:
+        --- Code
+        SetArmType(MyHand.eHandType.TYPE_RIGHT_FOREARM);
+        ---
+    */
+    private void SetArmType(eArmType eType)
+    {
+        _eArmType = eType;
+    }
+
+    /* 
+        Function: GetArmType
+        Returns:
+            Captoglove module use mode
+    */
+    public eArmType GetArmType()
+    {
+        return _eArmType;
+    }
+
+    /* 
+        Function: SetArmTransform
+        Attaches Captoglove module movement to arm transform.     
+
+        Parameters:
+        tArmObj - Forearm transform
+        ePitchAxis - Transform axis for pitch movement 
+        eYawAxis   - Transform axis for yaw movement 
+        eRollAxis  - Transform axis for roll movement 
+
+        Returns: 
+        0 - Success
+        -1 - Error: Transform error
+    
+        Example:
+        --- Code
+        SetArmTransform(transRA, Module.eModuleAxis.AXIS_X, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_Y);
+        ---
+
+        Notes: 
+        Place the arm transform horizontally in the scene before assigning it in this function.        
+    */
+    public int SetArmTransform(Transform tArmObj, eModuleAxis ePitchAxis, eModuleAxis eYawAxis, eModuleAxis eRollAxis)
+    {
+        if (tArmObj == null)
             return -1;
 
-        _tArmTransform = tHandObject;
-        _ePitchAxis = ePitch;
-        _eYawAxis = eYaw;
-        _eRollAxis = eRoll;
+        _tArm = tArmObj;
+        _ePitchAxis = ePitchAxis;
+        _eYawAxis = eYawAxis;
+        _eRollAxis = eRollAxis;
 
-        pfWirstXAngle = _tArmTransform.localEulerAngles.x;
-        pfWirstYAngle = _tArmTransform.localEulerAngles.y;
-        pfWirstZAngle = _tArmTransform.localEulerAngles.z;
+        _fArmXAngle = _tArm.localEulerAngles.x;
+        _fArmYAngle = _tArm.localEulerAngles.y;
+        _fArmZAngle = _tArm.localEulerAngles.z;
 
         return 0;
     }
-    public void Pitch(float UpRotation, float DownRotation)
+
+    /* 
+        Function: SetDefaultRotLimits
+        Set the limits for the rotation of the arm transform
+
+        Notes: 
+        The values configured in this function are valid only for the arm model delivered with these libraries
+    */
+    private void SetDefaultRotLimits()
     {
-        UnityMax = UpRotation;
-        UnityMin = DownRotation;
-
-        pitchA = (UnityMax - UnityMin) / (0.5f - (-0.5f));
-        pitchB = UnityMin - pitchA * (-0.5f);
-
-        //TraceLog("_fPitchA = "+_fPitchA+" _fPitchB = " + _fPitchB); 
+        if (GetArmType() == eArmType.TYPE_RIGHT_FOREARM)
+        {
+            SetPitchLimits(-90, 90);
+            SetYawLimits(0, -180);
+        }
+        else
+        {
+            //TODO Verify
+            SetPitchLimits(-90, 90);
+            SetYawLimits(-90, 90);           
+        }
     }
 
-    public void Yaw(float RightRotation, float LeftRotation)
+    /* 
+        Function: SetPitchLimits
+        Creates the algorithm for pitch movement of the arm 
+
+        Parameters:
+        fMaxUpRotation - Angle of rotation where the arm is pointing upward in the pitch movement
+        fMaxDownRotation - Angle of rotation where the arm is pointing downward in the pitch movement
+
+        Example:
+        --- Code
+        SetPitchLimits(90, -90);
+        ---
+
+        Notes: 
+        These rotation values must be set as they are read in Unity enviroment for the arm transform
+    */
+    public void SetPitchLimits(float fMaxUpRotation, float fMaxDownRotation)
     {
-        UnityMax = LeftRotation;
-        UnityMin = RightRotation;
+        float fCaptogloveUpLimit = 0.5f;
+        float fCaptogloveDownLimit = -0.5f;
 
-        yawA = (UnityMax - UnityMin) / (0.5f - (-0.5f));
-        yawB = UnityMin - yawA * (-0.5f);
-
-        //TraceLog("_fYawA = "+_fYawA+" _fYawB = " + _fYawB);
+        _fPitchVarA = (fMaxUpRotation - fMaxDownRotation) / (fCaptogloveUpLimit - fCaptogloveDownLimit);
+        _fPitchVarB = fMaxDownRotation - _fPitchVarA * fCaptogloveDownLimit;        
     }
 
-    //Wirst movement 
-    //CHECK IF CAN BE DONE THE SAME FOR ARMS AND HANDS
-    private void SetWirstNewAngle()
+    /* 
+        Function: SetYawLimits
+        Creates the algorithm for yaw movement of the arm 
+
+        Parameters:
+        fMaxRightRotation - Angle of rotation where the arm is pointing to the right in the yaw movement
+        fMaxLeftRotation - Angle of rotation where the arm is pointing to the left in the yaw movement
+
+        Example:
+        --- Code
+        SetYawLimits(90, -90);
+        ---
+
+        Notes: 
+        These rotation values must be set as they are read in Unity enviroment for the arm transform
+    */
+    public void SetYawLimits(float fMaxRightRotation, float fMaxLeftRotation)
+    {
+        float fCaptogloveRightLimit = 0.5f;
+        float fCaptogloveLeftLimit = -0.5f;
+
+        _fYawVarA = (fMaxLeftRotation - fMaxRightRotation) / (fCaptogloveRightLimit - fCaptogloveLeftLimit);
+        _fYawVarB = fMaxRightRotation - _fYawVarA * fCaptogloveLeftLimit;
+    }
+
+    /* 
+        Function: MoveArm
+        Updates arm transform rotation according with Captoglove module movement.
+
+        Notes: 
+        Call this function in the Update() of your app to simulate arm movement
+    */
+    public void MoveArm()
+    {
+        if (GetModuleInitialized())
+            SetArmNewAngle();
+
+        //If hand transform was assigned
+        if (_tArm != null)
+            _tArm.localEulerAngles = new Vector3(_fArmXAngle, _fArmYAngle, _fArmZAngle);
+    }
+
+    /* 
+        Function: SetArmNewAngle
+        Calculates arm transform rotation according with Captoglove module movement.    
+    */
+    private void SetArmNewAngle()
     {
         var args = psEventTaredQuart as BoardQuaternionEventArgs;
-        float pitchAngle;
-        float yawAngle;
-
         var args2 = psEventLinearAcceleration as BoardFloatVectorEventArgs;
+        float pitchAngle;
+        float yawAngle;        
 
         if (args != null)
         {
@@ -107,11 +231,11 @@ public class MyArm : Module
             float quaternionY = args.Value.Y;
             float quaternionZ = args.Value.Z;
 
-            pitchAngle = quaternionX * pitchA + pitchB;
-            yawAngle = quaternionY * yawA + yawB;
+            pitchAngle = quaternionX * _fPitchVarA + _fPitchVarB;
+            yawAngle = quaternionY * _fYawVarA + _fYawVarB;
 
             AsignAngle2Axes(pitchAngle, yawAngle, 0);
-
+/*
             if (args2 != null)
             {
                 float ZAcc = args2.Value.Z;
@@ -123,85 +247,53 @@ public class MyArm : Module
                 {
                     TraceLog("Move arm backguard");
                 }
-            }
+            }*/
         }
     }
 
-    private void AsignAngle2Axes(float pitchA, float yawA, float rollA)
+    /* 
+        Function: AsignAngle2Axes
+        Set rotation angle to each axis of the arm transform. 
+    */
+    private void AsignAngle2Axes(float fPitchA, float fYawA, float fRollA)
     {
         switch (_ePitchAxis)
         {
             case eModuleAxis.AXIS_X:
-                pfWirstXAngle = pitchA;
+                _fArmXAngle = fPitchA;
                 break;
             case eModuleAxis.AXIS_Y:
-                pfWirstYAngle = pitchA;
+                _fArmYAngle = fPitchA;
                 break;
             case eModuleAxis.AXIS_Z:
-                pfWirstZAngle = pitchA;
+                _fArmZAngle = fPitchA;
                 break;
         }
 
         switch (_eYawAxis)
         {
             case eModuleAxis.AXIS_X:
-                pfWirstXAngle = yawA;
+                _fArmXAngle = fYawA;
                 break;
             case eModuleAxis.AXIS_Y:
-                pfWirstYAngle = yawA;
+                _fArmYAngle = fYawA;
                 break;
             case eModuleAxis.AXIS_Z:
-                pfWirstZAngle = yawA;
+                _fArmZAngle = fYawA;
                 break;
         }
 
         switch (_eRollAxis)
         {
             case eModuleAxis.AXIS_X:
-                //		pfWirstXAngle = _fRollA;
+                //		_fWirstXAngle = _fRollA;
                 break;
             case eModuleAxis.AXIS_Y:
-                //		pfWirstYAngle = _fRollA;
+                //		_fWirstYAngle = _fRollA;
                 break;
             case eModuleAxis.AXIS_Z:
-                //		pfWirstZAngle = _fRollA; 
+                //		_fWirstZAngle = _fRollA; 
                 break;
         }
     }
-
-    public void Wirst()
-    {
-        if (GetIsInitialized())
-        {
-            SetWirstNewAngle();
-            SetLinearPosition();
-        }
-
-        _tArmTransform.localEulerAngles = new Vector3(pfWirstXAngle, pfWirstYAngle, pfWirstZAngle);
-    }
-
-    private void SetLinearPosition()
-    {
-
-
-
-    }
-
-    //Utility
-    private static string FloatsToString(float[] value)
-    {
-        string result = "";
-        var index = 0;
-        foreach (var element in value)
-        {
-            if (index != 0)
-            {
-                result += ", ";
-            }
-            result += element.ToString();
-            index += 1;
-        }
-        return result;
-    }
-
-} //Class MyHand
+} 

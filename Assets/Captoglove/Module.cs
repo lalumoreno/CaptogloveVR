@@ -10,19 +10,19 @@ using GSdkNet.Peripheral;
 using GSdkNet.BLE.Winapi;
 
 /* 
-     Class: Module
-     Handle Captoglove module. Used by MyHand and MyArm
+    Class: Module
+    Handles Captoglove module. Used by MyHand and MyArm
 */
 public class Module : MonoBehaviour
 {
     /* 
         Enum: peModuleType
-        List of Captoglove module use mode:
+        List of possible ways to use Captoglove module:
     
-        TYPE_RIGHT_HAND - As Right Hand sensor
-        TYPE_LEFT_HAND - As Left Hand sensor
-        TYPE_RIGHT_ARM - As Low Right Arm sensor
-        TYPE_LEFT_ARM - As Low Left Arm sensor
+        TYPE_RIGHT_HAND - As right hand sensor
+        TYPE_LEFT_HAND - As left hand sensor
+        TYPE_RIGHT_ARM - As low right arm sensor
+        TYPE_LEFT_ARM - As low left arm sensor
     */
     protected enum peModuleType
     {
@@ -36,9 +36,9 @@ public class Module : MonoBehaviour
         Enum: eModuleAxis
         List of axes:
 
-        AXIS_X - X Axis 
-        AXIS_Y - Y Axis
-        AXIS_Z - Z Axis
+        AXIS_X - X axis 
+        AXIS_Y - Y axis
+        AXIS_Z - Z axis
     */
     public enum eModuleAxis
     {
@@ -47,184 +47,277 @@ public class Module : MonoBehaviour
         AXIS_Z
     }
 
-    private peModuleType _eModuleType;
-    private int _nModuleID;
-    private string _sModuleName;
-    private bool _bModuleInitialized;
-    private bool _bModuleStarted;
-    private bool _bPropertiesRead;
-    private bool _bLogEnabled;
+    private peModuleType _eModuleType = peModuleType.TYPE_RIGHT_HAND;
+
+    //Have Setters and Getters
+    private int _nModuleID = 0;
+    private string _sModuleName = " ";
+    private bool _bModuleInitialized = false;
+    private bool _bModuleStarted = false;
+    private bool _bPropertiesRead = false;
+    private bool _bLogEnabled = false;
+
     private IPeripheralCentral _IModuleCentral;
-    private IBoardPeripheral pIModuleBoard;
+    private IBoardPeripheral _IModuleBoard;
+
+    protected float[] pfaFingerSensorMaxValue;
+    protected float[] pfaFingerSensorMinValue;
 
     protected BoardStreamEventArgs psEventTaredQuart;
     protected BoardStreamEventArgs psEventSensorState;
     protected BoardStreamEventArgs psEventLinearAcceleration;
 
-    protected float[] pfFingerSensorMaxValue;
-    protected float[] pfFingerSensorMinValue;
-
     /* 
-        Function: SetModuleType
-        Saves Captoglove module use mode
+        Function: InitModule
+        Initializes variables for Captoglove module configuration
 
         Parameters:
-        enType - Captoglove module use mode
-   
+        nID - Captoglove ID (4 digits number)
+        etype - Captoglove use mode
+
         Example:
-        SetModuleType(Module.peModuleType.TYPE_RIGHT_HAND);
+        --- Code
+        InitModule(2496, Module.peModuleType.TYPE_RIGHT_HAND);
+        ---
     */
-    private void SetModuleType(peModuleType enType)
+    protected void InitModule(int nID, peModuleType eType)
     {
-        _eModuleType = enType;
+        SetModuleID(nID);
+        SetModuleType(eType);
+        SetModuleInitialized(false);
+        SetModuleStarted(false);
+        SetPropertiesRead(false);
+        DisableLog();
+
+        //Default values 
+        pfaFingerSensorMaxValue = new float[10];
+        pfaFingerSensorMinValue = new float[10];
+
+        for (int i = 0; i < 10; i++)
+        {
+            pfaFingerSensorMaxValue[i] = 0f;
+            pfaFingerSensorMinValue[i] = 0f;
+        }
+
+        SetModuleInitialized(true);
     }
+
     /* 
-    Function: GetModuleType
-    Returns:
-    _eModuleType - Captoglove module use mode
+         Function: SetModuleType
+         Saves Captoglove module use mode
+
+         Parameters:
+         enType - Captoglove module use mode
+
+         Example:
+         --- Code
+         SetModuleType(Module.peModuleType.TYPE_RIGHT_HAND);
+         ---
+     */
+    private void SetModuleType(peModuleType eType)
+    {
+        _eModuleType = eType;
+    }
+
+    /* 
+        Function: GetModuleType
+        Returns:
+        Captoglove module use mode
     */
-    private peModuleType GetModuleType()
+    protected peModuleType GetModuleType()
     {
         return _eModuleType;
     }
+
     /* 
-    Function: SetModuleID
-    Saves Captoglove module ID
+        Function: SetModuleID
+        Saves Captoglove module ID
 
-    Parameters:
-    nID - Captoglove module ID (4 digits number)
+        Parameters:
+        nID - Captoglove module ID (4 digits number)
 
-    Example:
-    SetModuleID(2496);
-*/
+        Example:
+        --- Code
+        SetModuleID(2496);
+        ---
+    */
     private void SetModuleID(int nID)
     {
         _nModuleID = nID;
         SetModuleName();
     }
+
     /* 
         Function: GetModuleID
         Returns:
-        _nModuleID - Captoglove module ID
+        Captoglove module ID
     */
-    private int GetModuleID()
+    protected int GetModuleID()
     {
         return _nModuleID;
     }
 
-    //Set SetModule Name
+    /* 
+        Function: SetModuleName
+        Creates and saves Captoglove module name
+
+        Notes:
+        SetModuleID() must be called first
+    */
     private void SetModuleName()
     {
         _sModuleName = "CaptoGlove" + _nModuleID.ToString();
     }
-    private string GetModuleName()
+
+    /* 
+        Function: GetModuleName
+        Returns:
+        Captoglove module name
+    */
+    protected string GetModuleName()
     {
         return _sModuleName;
     }
 
-
-
-
     /* 
-       Function: SetModule
-       Initializes variables for Captoglove module configuration
+        Function: SetModuleInitialized
+        Saves whether Captoglove module is initialized or not
         
-       Parameters:
-       nID - Captoglove ID (4 digits number)
-       etype - Captoglove use mode
-
-       Example:
-       SetModule(2496, Module.peModuleType.TYPE_RIGHT_HAND);
-    */
-    protected void SetModule(int nID, peModuleType eType)
-    {
-        SetModuleID(nID);
-        SetModuleType(eType);
-        SetIsInitialized(true);
-        SetIsStarted(false);
-        SetPropertiesRead(false);
-        DisableLog();
-
-        //Default values 
-        pfFingerSensorMaxValue = new float[10];
-        pfFingerSensorMinValue = new float[10];
-
-        for (int i = 0; i < 10; i++)
-        {
-            pfFingerSensorMaxValue[i] = 0f;
-            pfFingerSensorMinValue[i] = 0f;
-        }
-    }
-
-    /* 
-        Function: SetModuleID
-        Save Captoglove module ID and create module name
-
         Parameters:
-        nID - Captoglove ID (4 digits number)   
+        b - true or false
 
         Example:
-        SetModuleID(2496);
+        --- Code
+        SetModuleInitialized(true);
+        ---
+
+        Notes: 
+        Normally used after InitModule() function is completed
     */
- 
-
-   
-
-    //Set Assigned
-    private void SetIsInitialized(bool b)
+    private void SetModuleInitialized(bool b)
     {
         _bModuleInitialized = b;
     }
-    protected bool GetIsInitialized()
+
+    /* 
+        Function: GetModuleInitialized
+        Returns:
+        true - Captoglove module initialized
+        false - Captoglove module NOT initialized
+    */
+    protected bool GetModuleInitialized()
     {
         return _bModuleInitialized;
     }
 
-    //Set Initialized
-    private void SetIsStarted(bool b)
+    /* 
+        Function: SetModuleStarted
+        Saves whether Captoglove module is started or not
+
+        Parameters:
+        b - true or false
+
+        Example:
+        --- Code
+        SetModuleStarted(true);
+        ---
+
+        Notes: 
+        Normally used after Start() function is completed
+    */
+    private void SetModuleStarted(bool b)
     {
         _bModuleStarted = b;
     }
-    protected bool GetIsStarted()
+
+    /* 
+        Function: GetModuleStarted
+        Returns:
+        true - Captoglove module started
+        false - Captoglove module NOT started     
+    */
+    protected bool GetModuleStarted()
     {
         return _bModuleStarted;
     }
 
+    /* 
+        Function: SetPropertiesRead
+        Saves whether Captoglove module properties have been read or not
+
+        Parameters:
+        b - true or false
+
+        Example:
+        --- Code
+        SetPropertiesRead(true);
+        ---
+
+        Notes: 
+        Normally used after ReadProperties() function is completed
+    */
     private void SetPropertiesRead(bool b)
     {
         _bPropertiesRead = b;
     }
 
-    protected bool GetPropertiesReady()
+    /* 
+        Function: GetPropertiesRead
+        Returns:
+        true - Captoglove module properties have been read
+        false - Captoglove module properties have NOT been read         
+    */
+    protected bool GetPropertiesRead()
     {
         return _bPropertiesRead;
     }
+
+    /* 
+        Function: EnableLog
+        Enables log printing during your app execution
+
+        Notes:
+        Log can be added with TraceLog() function
+    */
     public void EnableLog()
     {
         _bLogEnabled = true;
     }
 
-    private void DisableLog()
+    /* 
+        Function: DisableLog
+        Disables log printing during your app execution        
+    */
+    public void DisableLog()
     {
         _bLogEnabled = false;
     }
 
-    private bool GetIsLogEnabled()
+    /* 
+        Function: GetLogEnabled
+        Returns:
+            true - Log printing is enabled 
+            false - Log printing is disabled
+    */
+    private bool GetLogEnabled()
     {
         return _bLogEnabled;
     }
-    /*
-     Function: Start
-     Start Captoglove module and sensors
 
-     Returns:
-     0 - Success
-     -1 - Error: Module not initialized
-     */
+    /*
+    Function: Start
+    Starts looking for Captoglove module peripheral
+
+    Returns:
+    0  - Success
+    -1 - Error: Module not initialized
+
+    Notes: 
+    Call this function in the Start() of your application
+    */
     public int Start()
     {
-        //TODO Add enable/disable debug 
-        if (GetIsInitialized())
+        if (GetModuleInitialized())
         {
             TraceLog("Start, Looking for peripheral");
 
@@ -238,7 +331,7 @@ public class Module : MonoBehaviour
                     { PeripheralScanFlag.ScanType, BleScanType.Balanced }
                 });
 
-            SetIsStarted(true);
+            SetModuleStarted(true);
         }
         else
         {
@@ -249,89 +342,12 @@ public class Module : MonoBehaviour
         return 0;
     }
 
-    private async void ReadProperties()
-    {
-        SensorDescriptor sensorDescriptor = new SensorDescriptor();
-        EmulationModes emulationModes = new EmulationModes();
-        StreamTimeslots streamTimeSlots = new StreamTimeslots();
-
-        TraceLog("----- Read Attributes -------");
-        TraceLog("FW: " + pIModuleBoard.FirmwareVersion);
-        //TODO READ MORE ATTRIBUTES
-
-        TraceLog("----- Read Emulation Modes---");
-        await pIModuleBoard.EmulationModes.ReadAsync();
-        emulationModes = pIModuleBoard.EmulationModes.Value;
-        TraceLog(emulationModes.ToString());
-
-        TraceLog("----- Read Timeslots --------");
-        await pIModuleBoard.StreamTimeslots.ReadAsync();
-        streamTimeSlots = pIModuleBoard.StreamTimeslots.Value;
-        TraceLog(streamTimeSlots.ToString());
-
-        if (_eModuleType == peModuleType.TYPE_LEFT_HAND || _eModuleType == peModuleType.TYPE_RIGHT_HAND)
-        {
-            TraceLog("----- Read sensors Calibration ------");
-
-            for (int i = 0; i < 10; i++)
-            {
-                await pIModuleBoard.SensorDescriptors[i].ReadAsync();
-                sensorDescriptor = pIModuleBoard.SensorDescriptors[i].Value;
-                TraceLog("sensor " + i + sensorDescriptor.ToString());
-                pfFingerSensorMinValue[i] = sensorDescriptor.MinValue;
-                pfFingerSensorMaxValue[i] = sensorDescriptor.MaxValue;
-            }
-        }
-
-        SetPropertiesRead(true);
-    }
-
-    /* Function: SetProperties
-    Set Captoglove module properties: 
-    1. Calibrate module
-    2. Tare module
-    3. Commit changes
-    4. Set time slots
-    
-    Notes: 
-    This function overwrites previous configurations 
-    */
-
-    private void SetProperties()
-    {
-        StreamTimeslots st = new StreamTimeslots();
-
-        TraceLog("----- Calibration -----------");
-        pIModuleBoard.CalibrateGyroAsync();
-        pIModuleBoard.TareAsync();
-        pIModuleBoard.CommitChangesAsync();
-        //VERIFY IF THIS CALIBRATION WORKS 
-
-        TraceLog("----- Set timeslot ----------");
-        // without commit this changes are temporal					
-        st.Set(6, BoardStreamType.TaredQuaternion); //Wirst
-        st.Set(1, BoardStreamType.LinearAcceleration); //LinearAcc
-
-
-        if (_eModuleType == peModuleType.TYPE_LEFT_HAND || _eModuleType == peModuleType.TYPE_RIGHT_HAND)
-        {
-            st.Set(6, BoardStreamType.SensorsState);    //Fingers
-        }
-
-        pIModuleBoard.StreamTimeslots.WriteAsync(st);
-        //TODO ADD MORE VALUES
-
-        //TODO SET EMULATION MODE 
-        //TODO SET SENSOR CALIBRATION? 
-    }
-
     /* Function: Central_PeripheralsChanged
-     Detects Captoglove modules available and searches for module ID 
+     Looks for Captoglove module ID among the modules that are connected to bluetooth
       
      Parameres: 
-     sender - 
-     e -   
-
+     sender - Unused parameter
+     e - String received from Captoglove module  
      */
     private async void Central_PeripheralsChanged(object sender, PeripheralsEventArgs e)
     {
@@ -348,10 +364,10 @@ public class Module : MonoBehaviour
                 //If module ID is found
                 if (board.Name == _sModuleName)
                 {
-                    pIModuleBoard = board;
-                    pIModuleBoard.PropertyChanged += Peripheral_PropertyChanged; //Set configurations
-                    pIModuleBoard.StreamReceived += Peripheral_StreamReceived;   //Read stream
-                    await pIModuleBoard.StartAsync();
+                    _IModuleBoard = board;
+                    _IModuleBoard.PropertyChanged += Peripheral_PropertyChanged; //Set configurations
+                    _IModuleBoard.StreamReceived += Peripheral_StreamReceived;   //Read stream
+                    await _IModuleBoard.StartAsync();
                 }
                 return;
             }
@@ -363,22 +379,23 @@ public class Module : MonoBehaviour
 
     }
 
-    /* Function: Peripheral_PropertyChanged
-    Detects when Captoglove module is connected and set properties
+    /* 
+        Function: Peripheral_PropertyChanged
+        Detects if Captoglove module is connected to your app
      
-    Parameres: 
-    sender - 
-    e - 
+        Parameres: 
+        sender - Unused parameter
+        e - String received from Captoglove module  
     */
     private void Peripheral_PropertyChanged(object sender, PropertyChangedEventArgs e)
     {
-        //TraceLog("- Property changed: " + e.PropertyName.ToString());  
+        TraceLog("Property changed: " + e.PropertyName.ToString());
 
         if (e.PropertyName == PeripheralProperty.Status)
         {
-            TraceLog("Board status: " + pIModuleBoard.Status.ToString());
+            TraceLog("Board status: " + _IModuleBoard.Status.ToString());
 
-            if (pIModuleBoard.Status == PeripheralStatus.Connected)
+            if (_IModuleBoard.Status == PeripheralStatus.Connected)
             {
                 SetProperties();
                 ReadProperties();
@@ -386,16 +403,17 @@ public class Module : MonoBehaviour
         }
     }
 
-    /* Function: Peripheral_StreamReceived
-    Read continuously stream sent by Captoglove module
+    /* 
+        Function: Peripheral_StreamReceived
+        Captures continuously stream events from Captoglove module connected
      
-    Parameres: 
-    sender - 
-    e - 
+        Parameres: 
+        sender - Unused parameter
+        e - Stream of events from Captoglove module  
     */
     private void Peripheral_StreamReceived(object sender, BoardStreamEventArgs e)
     {
-        //TraceLog("- Stream Received : " + e.StreamType.ToString());		
+        TraceLog("Stream Received : " + e.StreamType.ToString());
         //var args = e as BoardFloatValueEventArgs;
 
         if (e.StreamType == BoardStreamType.TaredQuaternion)
@@ -415,24 +433,103 @@ public class Module : MonoBehaviour
         }
     }
 
-    /* Function: Stop
-    Stop communication with Captoglove module
+    /* 
+        Function: SetProperties
+        Set Captoglove module properties by default: 
+        Calibrate module, Tare module, Set time slots and Commit changes.
+    
+        Notes: 
+        This function overwrites previous module configuration 
+    */
+    private void SetProperties()
+    {
+        StreamTimeslots st = new StreamTimeslots();
+
+        TraceLog("1. Calibrate module");
+        _IModuleBoard.CalibrateGyroAsync();
+
+        TraceLog("2. Tare module");
+        _IModuleBoard.TareAsync();
+
+        TraceLog("3. Set timeslots");
+        st.Set(6, BoardStreamType.TaredQuaternion);     //MoveArm movement
+        //TODO Verify what is this for 
+        st.Set(1, BoardStreamType.LinearAcceleration);  //LinearAcc
+
+        if (_eModuleType == peModuleType.TYPE_LEFT_HAND || _eModuleType == peModuleType.TYPE_RIGHT_HAND)
+        {
+            st.Set(6, BoardStreamType.SensorsState);    //Fingers movement
+        }
+
+        _IModuleBoard.StreamTimeslots.WriteAsync(st);
+
+        // Without commit previous configuration is temporal
+        TraceLog("4. Commit changes");
+        _IModuleBoard.CommitChangesAsync();
+
+        //TODO VERIFY IF THIS CALIBRATION WORKS 
+    }
+
+    /* 
+        Function: ReadProperties
+        Read Captoglove module properties:
+        Firmware version, Emulation mode, Time slots and Sensors calibration.       
+    */
+    private async void ReadProperties()
+    {
+        SensorDescriptor sensorDescriptor = new SensorDescriptor();
+        EmulationModes emulationModes = new EmulationModes();
+        StreamTimeslots streamTimeSlots = new StreamTimeslots();
+
+        TraceLog("1. Firmware version");
+        TraceLog("" + _IModuleBoard.FirmwareVersion);
+
+        TraceLog("2. Emulation Mode");
+        await _IModuleBoard.EmulationModes.ReadAsync();
+        emulationModes = _IModuleBoard.EmulationModes.Value;
+        TraceLog(emulationModes.ToString());
+
+        TraceLog("3. Timeslots");
+        await _IModuleBoard.StreamTimeslots.ReadAsync();
+        streamTimeSlots = _IModuleBoard.StreamTimeslots.Value;
+        TraceLog(streamTimeSlots.ToString());
+
+        if (_eModuleType == peModuleType.TYPE_LEFT_HAND || _eModuleType == peModuleType.TYPE_RIGHT_HAND)
+        {
+            TraceLog("4. Sensors calibration");
+
+            for (int i = 0; i < 10; i++)
+            {
+                await _IModuleBoard.SensorDescriptors[i].ReadAsync();
+                sensorDescriptor = _IModuleBoard.SensorDescriptors[i].Value;
+                TraceLog("Sensor [" + i + "]" + sensorDescriptor.ToString());
+                pfaFingerSensorMinValue[i] = sensorDescriptor.MinValue;
+                pfaFingerSensorMaxValue[i] = sensorDescriptor.MaxValue;
+            }
+        }
+
+        SetPropertiesRead(true);
+    }
+
+    /* 
+        Function: Stop
+        Stops communication with Captoglove module
      
-    Note: 
-    Call this function when application is stopped
+        Notes: 
+        Call this function in the OnDestroy() of your application
     */
     public async void Stop()
     {
         TraceLog("Stopping");
 
-        if (pIModuleBoard != null)
+        if (_IModuleBoard != null)
         {
             TraceLog("Stop Peripheral");
-            pIModuleBoard.StreamReceived -= Peripheral_StreamReceived;
-            pIModuleBoard.PropertyChanged -= Peripheral_PropertyChanged;
-            await pIModuleBoard.StopAsync();
-            pIModuleBoard.Dispose();
-            pIModuleBoard = null;
+            _IModuleBoard.StreamReceived -= Peripheral_StreamReceived;
+            _IModuleBoard.PropertyChanged -= Peripheral_PropertyChanged;
+            await _IModuleBoard.StopAsync();
+            _IModuleBoard.Dispose();
+            _IModuleBoard = null;
         }
 
         if (_IModuleCentral != null)
@@ -446,11 +543,23 @@ public class Module : MonoBehaviour
         TraceLog("Stopped");
     }
 
+    /* 
+        Function: TraceLog
+        Prints log lines during your app execution
+        
+        Example: 
+        --- Code
+        TraceLog("This is a log message in my app"); 
+        ---
+
+        Notes:  
+        Log is printed only if EnableLog() function is called first
+    */
     protected void TraceLog(string s)
     {
-        if (GetIsLogEnabled())
+        if (GetLogEnabled())
             Debug.Log(_sModuleName + " >>> " + s);
     }
 
-} //Class Module
+}
 
