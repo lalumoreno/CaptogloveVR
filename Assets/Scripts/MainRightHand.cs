@@ -2,145 +2,186 @@
 
 public class MainRightHand : MonoBehaviour
 {
-    public Transform transRH;
+    //Assign transforms in Unity editor
+    public Transform tHand;    
+    public Transform tThumb;
+    public Transform tIndex;
+    public Transform tMiddle;
+    public Transform tRing;    
+    public Transform tPinky;
+    public GameObject ArmObject; 
 
-    //Set this by default 
-    public Transform transThuR;
-    public Transform transIndR;
-    public Transform transMidR;
-    public Transform transRinR;
-    public Transform transPinR;
+    public Transform tButton;
+    public Transform tCapsule;
+    public Transform tLever;
+    public Transform tLigth;
 
-    private MyHand RightHand;
+    private MyHand RightHand = null;
 
-    public Transform myButton;
-    public Transform myCapsule;
-    public Transform myLever;
-    public Transform myLight;
+    private Renderer rCapsule;
+    private Renderer rButton;
+    private Renderer rLever;
+    private Renderer rLigth;
 
-    private Transform myCatchObject;
-    private Transform myPressedObject;
+    private GUIStyle style;    
 
-    private Renderer capsuleRenderer;
-    private Renderer buttonRenderer;
-    private Renderer leverRenderer;
-    private Renderer lightRender;
+    private bool bCapsule = false;
+    private bool bLight = false;
+    private bool bLever = false;
+    private bool bButton = false;
 
-    private GUIStyle style;
-    private bool blights;
-    //ASK in SCRIPT IF USE ARM OR NOT 
+    //Enables-Disables arm in Unity Editor
+    public bool UseArm = false;  
 
     // Start is called before the first frame update
     void Start()
     {
-        capsuleRenderer = myCapsule.GetComponent<Renderer>();
-        buttonRenderer = myButton.GetComponent<Renderer>();
-        leverRenderer = myLever.GetComponent<Renderer>();
-        lightRender = myLight.GetComponent<Renderer>();
-
-        myPressedObject = null;
-        myCatchObject = null;
-
-        blights = false;
-
-        style = new GUIStyle();
-        style.normal.textColor = Color.black;
-
-        //Do all of this in interface for Unity - values in screen 
-
-        RightHand = new MyHand(2443, MyHand.eHandType.TYPE_RIGHT_HAND);        
-        RightHand.SetHandTransform(transRH, Module.eModuleAxis.AXIS_X, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_Y);
-        RightHand.SetFingerTransform(transThuR, transIndR, transMidR, transRinR, transPinR);
+        //Configuration for Captoglove sensor as Right Hand 
+        RightHand = new MyHand(2443, MyHand.eHandType.TYPE_RIGHT_HAND);
         RightHand.EnableLog();
+        RightHand.SetHandTransform(tHand, Module.eModuleAxis.AXIS_X, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_Y);
+        RightHand.SetFingerTransform(tThumb, tIndex, tMiddle, tRing, tPinky);
 
-        RightHand.Start(); //To start, the model is not needed 		
+        //Needed to enable Captoglove sensor as Right Arm
+        if (UseArm)
+            ArmObject.GetComponent<MainRightArm>().enabled = true; 
+        else
+            ArmObject.GetComponent<MainRightArm>().enabled = false;
+
+        //Handles objects color
+        rCapsule = tCapsule.GetComponent<Renderer>();
+        rButton = tButton.GetComponent<Renderer>();
+        rLever = tLever.GetComponent<Renderer>();
+        rLigth = tLigth.GetComponent<Renderer>();
+
+        //Messages in display
+        style = new GUIStyle();
+        style.normal.textColor = Color.black;        
+        
+        //Starts Captoglove sensor 
+        RightHand.Start();        
     }
 
     // Update is called once per frame
     void Update()
-    {
-        RightHand.MoveHand();
-        RightHand.MoveFingers();
+    {   
+        //Enables hand movement 
+        if (UseArm)
+            RightHand.MoveHandNoYaw();
+        else
+            RightHand.MoveHand();
 
-        if (RightHand.IsHandClosed() && myCatchObject != null)
+        //Enables finger movement
+        RightHand.MoveFingers();
+        
+        //Interaction with capsule 
+        if (RightHand.IsHandClosed() && bCapsule)
+        {                      
+            CatchCapsule();
+        }
+        //Interaction with Lever
+        else if (RightHand.IsHandClosed() && bLever)
         {
-            Debug.Log("Right Hand is closed");
-            //RightHand.CatchObject(myLever);			
-            RightHand.CatchObject(myCatchObject);
-        }       /*
-		else if (RightHand.isNumber1() && blights) 
+            CatchLever();
+        }
+        //Ineraction with light
+        else if (RightHand.FingerGesture1() && bLight) 
 		{
-			lightRender.material.SetColor("_Color", Color.red);
+			rLigth.material.SetColor("_Color", Color.red);
 		}
-		else if (RightHand.isNumber2() && blights)
+        //Ineraction with light
+        else if (RightHand.FingerGesture2() && bLight)
 		{
-			lightRender.material.SetColor("_Color", Color.yellow);
+			rLigth.material.SetColor("_Color", Color.yellow);
 		}
-		else if (RightHand.isNumber3() && blights)
+        //Ineraction with light
+        else if (RightHand.FingerGesture3() && bLight)
 		{
-			lightRender.material.SetColor("_Color", Color.green);
+			rLigth.material.SetColor("_Color", Color.green);
 		}
-		else if (RightHand.isPressed() && myPressedObject != null)
-		{
-			Debug.Log("Right Button pressed");
-			RightHand.PressButton(myPressedObject, new Vector3(-11.88f, 9, 20.06f));
+        //Ineraction with button
+        else if (RightHand.IsSensorPressed() && bButton)
+		{			
+			PressButton(true);
 		}
-		else if (!RightHand.isPressed())
+		else if (!RightHand.IsSensorPressed())
 		{
-			RightHand.PressButton(myPressedObject, new Vector3(-11.88f, 9, 19.48f));
-		}*/
+            PressButton(false);
+		}
 
     }
-    private void OnTriggerEnter(Collider other)
+
+    private void CatchCapsule()
+    {
+        tCapsule.position = RightHand.GetMiddlePosition(); 
+    }
+
+    private void CatchLever()
+    {
+        Vector3 vHandPos = RightHand.GetHandPosition();
+
+        if ((vHandPos.y - 2) > 7.5f &&
+            (vHandPos.y - 2) < 12f)
+        {
+            tLever.position = new Vector3(tLever.position.x, vHandPos.y - 2, tLever.position.z);
+        }
+    }
+
+    private void PressButton(bool b)
+    {
+        if (b)
+            tButton.position = new Vector3(-11.88f, 9, 20.06f);
+        else
+            tButton.position = new Vector3(-11.88f, 9, 19.48f);
+    }
+
+    private void OnTriggerEnter(UnityEngine.Collider other)
     {
         if (other.tag == "Capsule")
         {
-            Debug.Log("OnTriggerEnter!!");
-            capsuleRenderer.material.SetColor("_Color", Color.green);
-            myCatchObject = myCapsule;
+            Debug.Log("Capsule OnTriggerEnter!!");
+            rCapsule.material.SetColor("_Color", Color.green);
+            bCapsule = true;
         }
         else if (other.tag == "Button")
         {
-            Debug.Log("OnTriggerEnter!!");
-            buttonRenderer.material.SetColor("_Color", Color.green);
-            myPressedObject = myButton;
+            Debug.Log("Button OnTriggerEnter!!");
+            rButton.material.SetColor("_Color", Color.green);
+            bButton = true; 
         }
         else if (other.tag == "Lever")
         {
-            Debug.Log("OnTriggerEnter!!");
-            leverRenderer.material.SetColor("_Color", Color.green);
-            myCatchObject = myLever;
+            Debug.Log("Lever OnTriggerEnter!!");
+            rLever.material.SetColor("_Color", Color.green);
+            bLever = true;
         }
         else if (other.tag == "Light")
         {
-            Debug.Log("OnTriggerEnter!!");
-            blights = true;
+            Debug.Log("Light OnTriggerEnter!!");
+            bLight = true;           
         }
     }
 
-    private void OnTriggerExit(Collider other)
+    private void OnTriggerExit(UnityEngine.Collider other)
     {
         if (other.tag == "Capsule")
         {
-            capsuleRenderer.material.SetColor("_Color", Color.red);
-            myCatchObject = null;
+            rCapsule.material.SetColor("_Color", Color.red);
+            bCapsule = false;
         }
         else if (other.tag == "Button")
-        {
-            Debug.Log("OnTriggerEnter!!");
-            buttonRenderer.material.SetColor("_Color", Color.red);
-            myPressedObject = null;
+        {            
+            rButton.material.SetColor("_Color", Color.red);
+            bButton = false;
         }
         else if (other.tag == "Lever")
-        {
-            Debug.Log("OnTriggerEnter!!");
-            leverRenderer.material.SetColor("_Color", Color.red);
-            myCatchObject = null;
+        {            
+            rLever.material.SetColor("_Color", Color.red);
+            bLever = false;
         }
-        else if (other.tag == "Player")
-        {
-            Debug.Log("OnTriggerEnter!!");
-            blights = false;
+        else if (other.tag == "Light")
+        {            
+            bLight = false;
         }
 
     }
@@ -160,7 +201,8 @@ public class MainRightHand : MonoBehaviour
 
     private void OnDestroy()
     {
-        RightHand.Stop();
+        if(RightHand!= null)
+            RightHand.Stop();
     }
 
 }

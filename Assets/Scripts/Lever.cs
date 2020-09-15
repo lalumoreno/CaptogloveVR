@@ -1,32 +1,26 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Lever : MonoBehaviour
 {
-    public Transform door;
-    public Transform lever;
+    public Transform tDoor;
+    public Transform tLever;
 
-    private Vector3 LeverPosition;
-    private float maxPos, minPos, xPos, zPos;
-
-    //public float xRot;
-    Quaternion test;
-    private Vector3 openPosition;
-    private Vector3 closePosition;
+    private Vector3 vLeverPosition;
+    private float fMaxYPos, fMinYPos, fXPos, fZPos;
+        
+    private Vector3 vDoorOpenPos;
+    private Vector3 vDoorClosedPos;
 
     // Start is called before the first frame update
     void Start()
     {
-        maxPos = 1.66f;
-        minPos = -1.66f;
+        fMaxYPos = 0;
+        fMinYPos = -2.84f;
+        fXPos = 0;
+        fZPos = 0;
 
-        xPos = 0;
-        zPos = 0.29f;
-
-        openPosition = new Vector3(-1.48f, 10.68f, 19.91f);
-        closePosition = new Vector3(2.42f, 10.68f, 19.91f); 
+        vDoorOpenPos = new Vector3(-1.48f, 10.68f, 19.91f);
+        vDoorClosedPos = new Vector3(2.42f, 10.68f, 19.91f); 
     }
 
     // Update is called once per frame
@@ -37,28 +31,22 @@ public class Lever : MonoBehaviour
     }
 
     private void OpenDoor()
-    {
-        LeverPosition = lever.localPosition;
-
-        if (LeverPosition.y >= maxPos)
-            door.localPosition = closePosition;
-        else if (LeverPosition.y <= minPos)
-            door.localPosition = openPosition; 
+    {    
+        if (tLever.localPosition.y >= fMaxYPos)
+            tDoor.localPosition = vDoorClosedPos;
+        else if (tLever.localPosition.y <= fMinYPos)
+            tDoor.localPosition = vDoorOpenPos; 
     }
 
     private void LimitPosition()
     {
-        LeverPosition = lever.localPosition;
+        vLeverPosition = tLever.localPosition;
 
-        if (LeverPosition.y > maxPos)
-        {
-            LeverPosition.y = maxPos;
-        }
-        if (LeverPosition.y < minPos)
-        {
-            LeverPosition.y = minPos;
-        }
+        if (tLever.localPosition.y > fMaxYPos)        
+            vLeverPosition.y = fMaxYPos;        
+        else if (tLever.localPosition.y < fMinYPos)        
+            vLeverPosition.y = fMinYPos;        
 
-        lever.localPosition = new Vector3(xPos, LeverPosition.y, zPos) ;
+        tLever.localPosition = new Vector3(fXPos, vLeverPosition.y, fZPos) ;
     }
 }

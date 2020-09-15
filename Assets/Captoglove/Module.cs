@@ -11,11 +11,12 @@ using GSdkNet.BLE.Winapi;
 
 /* 
     Class: Module
-    Handles Captoglove module. Used by MyHand and MyArm
+    Handles Captoglove module. Used by MyHand and MyArm.
 */
-public class Module : MonoBehaviour
+public class Module 
 {
     /* 
+        Group: Types
         Enum: peModuleType
         List of possible ways to use Captoglove module:
     
@@ -69,7 +70,7 @@ public class Module : MonoBehaviour
 
     /* 
         Function: InitModule
-        Initializes variables for Captoglove module configuration
+        Initializes variables for Captoglove module configuration.
 
         Parameters:
         nID - Captoglove ID (4 digits number)
@@ -104,7 +105,7 @@ public class Module : MonoBehaviour
 
     /* 
          Function: SetModuleType
-         Saves Captoglove module use mode
+         Saves Captoglove module use mode.
 
          Parameters:
          enType - Captoglove module use mode
@@ -131,7 +132,7 @@ public class Module : MonoBehaviour
 
     /* 
         Function: SetModuleID
-        Saves Captoglove module ID
+        Saves Captoglove module ID.
 
         Parameters:
         nID - Captoglove module ID (4 digits number)
@@ -159,7 +160,7 @@ public class Module : MonoBehaviour
 
     /* 
         Function: SetModuleName
-        Creates and saves Captoglove module name
+        Creates and saves Captoglove module name.
 
         Notes:
         SetModuleID() must be called first
@@ -181,7 +182,7 @@ public class Module : MonoBehaviour
 
     /* 
         Function: SetModuleInitialized
-        Saves whether Captoglove module is initialized or not
+        Saves whether Captoglove module is initialized or not.
         
         Parameters:
         b - true or false
@@ -192,7 +193,7 @@ public class Module : MonoBehaviour
         ---
 
         Notes: 
-        Normally used after InitModule() function is completed
+        Normally used after InitModule() function is completed.
     */
     private void SetModuleInitialized(bool b)
     {
@@ -212,7 +213,7 @@ public class Module : MonoBehaviour
 
     /* 
         Function: SetModuleStarted
-        Saves whether Captoglove module is started or not
+        Saves whether Captoglove module is started or not.
 
         Parameters:
         b - true or false
@@ -223,7 +224,7 @@ public class Module : MonoBehaviour
         ---
 
         Notes: 
-        Normally used after Start() function is completed
+        Normally used after Start() function is completed.
     */
     private void SetModuleStarted(bool b)
     {
@@ -243,7 +244,7 @@ public class Module : MonoBehaviour
 
     /* 
         Function: SetPropertiesRead
-        Saves whether Captoglove module properties have been read or not
+        Saves whether Captoglove module properties have been read or not.
 
         Parameters:
         b - true or false
@@ -254,7 +255,7 @@ public class Module : MonoBehaviour
         ---
 
         Notes: 
-        Normally used after ReadProperties() function is completed
+        Normally used after ReadProperties() function is completed.
     */
     private void SetPropertiesRead(bool b)
     {
@@ -274,10 +275,10 @@ public class Module : MonoBehaviour
 
     /* 
         Function: EnableLog
-        Enables log printing during your app execution
+        Enables log printing during your app execution.
 
         Notes:
-        Log can be added with TraceLog() function
+        Log can be added with TraceLog() function.
     */
     public void EnableLog()
     {
@@ -286,7 +287,7 @@ public class Module : MonoBehaviour
 
     /* 
         Function: DisableLog
-        Disables log printing during your app execution        
+        Disables log printing during your app execution.        
     */
     public void DisableLog()
     {
@@ -305,15 +306,15 @@ public class Module : MonoBehaviour
     }
 
     /*
-    Function: Start
-    Starts looking for Captoglove module peripheral
+        Function: Start
+        Starts looking for Captoglove module peripheral.
 
-    Returns:
-    0  - Success
-    -1 - Error: Module not initialized
+        Returns:
+        0  - Success
+        -1 - Error: Module not initialized
 
-    Notes: 
-    Call this function in the Start() of your application
+        Notes: 
+        Call this function in the Start() of your application.
     */
     public int Start()
     {
@@ -342,12 +343,13 @@ public class Module : MonoBehaviour
         return 0;
     }
 
-    /* Function: Central_PeripheralsChanged
-     Looks for Captoglove module ID among the modules that are connected to bluetooth
+    /* 
+        Function: Central_PeripheralsChanged
+        Looks for Captoglove module ID among the modules that are connected to bluetooth.
       
-     Parameres: 
-     sender - Unused parameter
-     e - String received from Captoglove module  
+        Parameres: 
+        sender - Unused parameter
+        e - String received from Captoglove module  
      */
     private async void Central_PeripheralsChanged(object sender, PeripheralsEventArgs e)
     {
@@ -381,16 +383,14 @@ public class Module : MonoBehaviour
 
     /* 
         Function: Peripheral_PropertyChanged
-        Detects if Captoglove module is connected to your app
+        Detects if Captoglove module is connected to your app.
      
         Parameres: 
         sender - Unused parameter
         e - String received from Captoglove module  
     */
     private void Peripheral_PropertyChanged(object sender, PropertyChangedEventArgs e)
-    {
-        TraceLog("Property changed: " + e.PropertyName.ToString());
-
+    { 
         if (e.PropertyName == PeripheralProperty.Status)
         {
             TraceLog("Board status: " + _IModuleBoard.Status.ToString());
@@ -405,7 +405,7 @@ public class Module : MonoBehaviour
 
     /* 
         Function: Peripheral_StreamReceived
-        Captures continuously stream events from Captoglove module connected
+        Captures continuously stream events from Captoglove module connected.
      
         Parameres: 
         sender - Unused parameter
@@ -413,9 +413,6 @@ public class Module : MonoBehaviour
     */
     private void Peripheral_StreamReceived(object sender, BoardStreamEventArgs e)
     {
-        TraceLog("Stream Received : " + e.StreamType.ToString());
-        //var args = e as BoardFloatValueEventArgs;
-
         if (e.StreamType == BoardStreamType.TaredQuaternion)
         {
             psEventTaredQuart = e;
@@ -428,18 +425,16 @@ public class Module : MonoBehaviour
         //CAPTURE MORE VALUES 
         if (e.StreamType == BoardStreamType.LinearAcceleration)
         {
-            psEventLinearAcceleration = e;
-            //TraceLog("Linear Acc" + args.Value.Z);
+            psEventLinearAcceleration = e;            
         }
     }
 
     /* 
         Function: SetProperties
-        Set Captoglove module properties by default: 
-        Calibrate module, Tare module, Set time slots and Commit changes.
+        Set Captoglove module properties by default: Calibrate module, Tare module, Set time slots and Commit changes.
     
         Notes: 
-        This function overwrites previous module configuration 
+        This function overwrites previous module configuration. 
     */
     private void SetProperties()
     {
@@ -472,8 +467,7 @@ public class Module : MonoBehaviour
 
     /* 
         Function: ReadProperties
-        Read Captoglove module properties:
-        Firmware version, Emulation mode, Time slots and Sensors calibration.       
+        Read Captoglove module properties: Firmware version, Emulation mode, Time slots and Sensors calibration.       
     */
     private async void ReadProperties()
     {
@@ -481,22 +475,22 @@ public class Module : MonoBehaviour
         EmulationModes emulationModes = new EmulationModes();
         StreamTimeslots streamTimeSlots = new StreamTimeslots();
 
-        TraceLog("1. Firmware version");
+        TraceLog("1. Read firmware version");
         TraceLog("" + _IModuleBoard.FirmwareVersion);
 
-        TraceLog("2. Emulation Mode");
+        TraceLog("2. Read emulation Mode");
         await _IModuleBoard.EmulationModes.ReadAsync();
         emulationModes = _IModuleBoard.EmulationModes.Value;
         TraceLog(emulationModes.ToString());
 
-        TraceLog("3. Timeslots");
+        TraceLog("3. Read timeslots");
         await _IModuleBoard.StreamTimeslots.ReadAsync();
         streamTimeSlots = _IModuleBoard.StreamTimeslots.Value;
         TraceLog(streamTimeSlots.ToString());
 
         if (_eModuleType == peModuleType.TYPE_LEFT_HAND || _eModuleType == peModuleType.TYPE_RIGHT_HAND)
         {
-            TraceLog("4. Sensors calibration");
+            TraceLog("4. Read sensor calibration");
 
             for (int i = 0; i < 10; i++)
             {
@@ -513,10 +507,10 @@ public class Module : MonoBehaviour
 
     /* 
         Function: Stop
-        Stops communication with Captoglove module
+        Stops communication with Captoglove module.
      
         Notes: 
-        Call this function in the OnDestroy() of your application
+        Call this function in the OnDestroy() of your application.
     */
     public async void Stop()
     {
@@ -545,7 +539,7 @@ public class Module : MonoBehaviour
 
     /* 
         Function: TraceLog
-        Prints log lines during your app execution
+        Prints log lines during your app execution.
         
         Example: 
         --- Code
@@ -553,7 +547,7 @@ public class Module : MonoBehaviour
         ---
 
         Notes:  
-        Log is printed only if EnableLog() function is called first
+        Log is printed only if EnableLog() function is called first.
     */
     protected void TraceLog(string s)
     {

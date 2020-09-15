@@ -1,5 +1,6 @@
 using UnityEngine;
 using GSdkNet.Board;
+using System.IO;
 
 /* 
     Class: MyArm
@@ -28,9 +29,12 @@ public class MyArm : Module
 
     private Transform _tArm = null;
 
+    private StreamWriter swArmWriter = null;
+    private bool bArmFile = false;
+
     /* 
         Constructor: MyArm
-        Initializes variables for Captoglove module configuration
+        Initializes variables for Captoglove module configuration.
 
         Parameters:
         nID - Captoglove ID (4 digits number)
@@ -59,7 +63,7 @@ public class MyArm : Module
 
     /* 
         Function: SetArmType
-        Saves Captoglove module use mode
+        Saves Captoglove module use mode.
 
         Parameters:
         eType - Captoglove module use mode
@@ -109,26 +113,53 @@ public class MyArm : Module
     public int SetArmTransform(Transform tArmObj, eModuleAxis ePitchAxis, eModuleAxis eYawAxis, eModuleAxis eRollAxis)
     {
         if (tArmObj == null)
+        {
+            TraceLog("Arm transform error");
             return -1;
-
+        }
         _tArm = tArmObj;
         _ePitchAxis = ePitchAxis;
         _eYawAxis = eYawAxis;
         _eRollAxis = eRollAxis;
-
-        _fArmXAngle = _tArm.localEulerAngles.x;
-        _fArmYAngle = _tArm.localEulerAngles.y;
-        _fArmZAngle = _tArm.localEulerAngles.z;
-
+        
+        _fArmXAngle = _tArm.localEulerAngles.x;       
+        _fArmYAngle = _tArm.localEulerAngles.y;        
+        _fArmZAngle = _tArm.localEulerAngles.z;        
+        
         return 0;
     }
 
     /* 
-        Function: SetDefaultRotLimits
-        Set the limits for the rotation of the arm transform
+        Function: SetInitialArmRot
+        Saves initial rotation for arm transform.
+
+        Parameters:
+        fRotX - Forearm transform
+        fRotY - Transform axis for pitch movement 
+        fRotZ   - Transform axis for yaw movement      
+
+        Example:
+        --- Code
+        SetInitialArmRot(0, 90, -90);
+        ---
 
         Notes: 
-        The values configured in this function are valid only for the arm model delivered with these libraries
+        Use this function to manually set the initial rotation of arm transform in case SetArmTransform() is saving wrong values by default.
+        Use this function after SetArmTransform().
+    */
+    public void SetInitialArmRot(float fRotX, float fRotY, float fRotZ)
+    {
+        _fArmXAngle = fRotX;
+        _fArmYAngle = fRotY;
+        _fArmZAngle = fRotZ;
+    }
+
+    /* 
+        Function: SetDefaultRotLimits
+        Set the limits for the rotation of the arm transform.
+
+        Notes: 
+        The values configured in this function are valid only for the arm model delivered with these libraries.
     */
     private void SetDefaultRotLimits()
     {
@@ -139,15 +170,14 @@ public class MyArm : Module
         }
         else
         {
-            //TODO Verify
-            SetPitchLimits(-90, 90);
-            SetYawLimits(-90, 90);           
+            SetPitchLimits(90, -90);
+            SetYawLimits(0, 180);           
         }
     }
 
     /* 
         Function: SetPitchLimits
-        Creates the algorithm for pitch movement of the arm 
+        Creates the algorithm for pitch movement of the arm. 
 
         Parameters:
         fMaxUpRotation - Angle of rotation where the arm is pointing upward in the pitch movement
@@ -159,7 +189,7 @@ public class MyArm : Module
         ---
 
         Notes: 
-        These rotation values must be set as they are read in Unity enviroment for the arm transform
+        These rotation values must be set as they are read in Unity enviroment for the arm transform.
     */
     public void SetPitchLimits(float fMaxUpRotation, float fMaxDownRotation)
     {
@@ -172,7 +202,7 @@ public class MyArm : Module
 
     /* 
         Function: SetYawLimits
-        Creates the algorithm for yaw movement of the arm 
+        Creates the algorithm for yaw movement of the arm. 
 
         Parameters:
         fMaxRightRotation - Angle of rotation where the arm is pointing to the right in the yaw movement
@@ -184,7 +214,7 @@ public class MyArm : Module
         ---
 
         Notes: 
-        These rotation values must be set as they are read in Unity enviroment for the arm transform
+        These rotation values must be set as they are read in Unity enviroment for the arm transform.
     */
     public void SetYawLimits(float fMaxRightRotation, float fMaxLeftRotation)
     {
@@ -200,15 +230,15 @@ public class MyArm : Module
         Updates arm transform rotation according with Captoglove module movement.
 
         Notes: 
-        Call this function in the Update() of your app to simulate arm movement
+        Call this function in the Update() of your app to simulate arm movement.
     */
     public void MoveArm()
     {
         if (GetModuleInitialized())
-            SetArmNewAngle();
+            SetArmNewAngle();        
 
         //If hand transform was assigned
-        if (_tArm != null)
+        if (GetModuleInitialized() && _tArm != null)
             _tArm.localEulerAngles = new Vector3(_fArmXAngle, _fArmYAngle, _fArmZAngle);
     }
 
@@ -221,20 +251,20 @@ public class MyArm : Module
         var args = psEventTaredQuart as BoardQuaternionEventArgs;
         var args2 = psEventLinearAcceleration as BoardFloatVectorEventArgs;
         float pitchAngle;
-        float yawAngle;        
+        float yawAngle;
+        float rollAngle;
 
         if (args != null)
-        {
-            //TraceLog("- Stream Received : " + psEventTaredQuart.StreamType.ToString());	
-
+        {           
             float quaternionX = args.Value.X;
             float quaternionY = args.Value.Y;
             float quaternionZ = args.Value.Z;
 
             pitchAngle = quaternionX * _fPitchVarA + _fPitchVarB;
-            yawAngle = quaternionY * _fYawVarA + _fYawVarB;
+            yawAngle = quaternionY * _fYawVarA + _fYawVarB;            
+            rollAngle = _fArmXAngle;
 
-            AsignAngle2Axes(pitchAngle, yawAngle, 0);
+            AsignAngle2Axes(pitchAngle, yawAngle, rollAngle);
 /*
             if (args2 != null)
             {
@@ -286,14 +316,58 @@ public class MyArm : Module
         switch (_eRollAxis)
         {
             case eModuleAxis.AXIS_X:
-                //		_fWirstXAngle = _fRollA;
+                _fArmXAngle = fRollA;                
                 break;
             case eModuleAxis.AXIS_Y:
-                //		_fWirstYAngle = _fRollA;
+                _fArmYAngle = fRollA;
                 break;
             case eModuleAxis.AXIS_Z:
-                //		_fWirstZAngle = _fRollA; 
+                _fArmZAngle = fRollA; 
                 break;
+        }
+    }
+
+    /* 
+        Function: SaveArmMovInFile
+        Saves module data in file with following format: x arm rotation; y arm rotation; z arm rotation  
+
+        Parameters:
+            sFileName - File name
+
+        Example:
+        --- Code
+        SaveArmMovInFile("RightArmMov.csv");
+        ---
+
+        Notes:
+        Call this function in Updated() of your app to save data continuously 
+    */
+    public void SaveArmMovInFile(string sFileName)
+    {
+        var args = psEventTaredQuart as BoardQuaternionEventArgs;
+        string serializedData;
+
+        if (args != null)
+        {
+            if (!bArmFile)
+            {
+                swArmWriter = new StreamWriter(sFileName, true);
+                bArmFile = true;
+            }
+
+            float quaternionX = args.Value.X;
+            float quaternionY = args.Value.Y;
+            float quaternionZ = args.Value.Z;
+
+            serializedData =
+                quaternionX.ToString() + ";" +
+                quaternionY.ToString() + ";" +
+                quaternionZ.ToString() + "\n";
+
+            // Write to disk
+            if (swArmWriter != null)
+                swArmWriter.Write(serializedData);
+
         }
     }
 } 

@@ -1,35 +1,28 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class button : MonoBehaviour
+public class Button : MonoBehaviour
 {
-    public Transform btn;
-    public Transform door;
+    public Transform tButton;
+    public Transform tDoor;
 
-    private Vector3 pressedPos, releasedPos; 
-    private Vector3 doorUpPos, doorDownPos;
+    public Vector3 vPressedPos, vReleasedPos; 
+    private Vector3 vDoorUpPos, vDoorDownPos;
 
     // Start is called before the first frame update
     void Start()
     {
-        pressedPos = new Vector3(-11.88f, 9, 20.06f);
-        releasedPos = new Vector3(-11.88f, 9, 19.48f);
-        doorDownPos = new Vector3(-6.91f, 7.94f, 18.96f);
-        doorUpPos = new Vector3(-6.91f, 12.68f, 18.96f);
+        vPressedPos = new Vector3(-11.88f, 9, 20.06f);
+        vReleasedPos = new Vector3(-11.88f, 9, 19.48f);
+        vDoorDownPos = new Vector3(-6.91f, 7.94f, 18.96f);
+        vDoorUpPos = new Vector3(-6.91f, 12.68f, 18.96f);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(btn.localPosition == pressedPos)
-        {
-            door.localPosition = doorUpPos;
-        }
-        else
-        {
-            door.localPosition = doorDownPos;
-        }
-    
+        if(tButton.localPosition == vPressedPos)        
+            tDoor.localPosition = vDoorUpPos;        
+        else        
+            tDoor.localPosition = vDoorDownPos;         
     }
 }

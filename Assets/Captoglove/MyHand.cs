@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using GSdkNet.Board;
+using System.IO;
 
 /* 
     Class: MyHand
@@ -60,9 +61,14 @@ public class MyHand : Module
     private Transform[] _taRingChild;
     private Transform[] _taPinkyChild;
 
+    private StreamWriter swHandWriter = null;
+    private StreamWriter swFingerWriter = null;
+    private bool bHandFile = false;
+    private bool bFingerFile = false;
+
     /* 
         Constructor: MyHand
-        Initializes variables for Captoglove module configuration
+        Initializes variables for Captoglove module configuration.
 
         Parameters:
         nID - Captoglove ID (4 digits number)
@@ -139,7 +145,7 @@ public class MyHand : Module
 
     /* 
          Function: SetHandType
-         Saves Captoglove module use mode
+         Saves Captoglove module use mode.
 
          Parameters:
          eType - Captoglove module use mode
@@ -166,7 +172,7 @@ public class MyHand : Module
 
     /* 
         Function: SetFingerAlgorithmReady
-        Saves whether the algorithm for finger movement has been created or not
+        Saves whether the algorithm for finger movement has been created or not.
 
         Parameters:
         b - true or false
@@ -177,7 +183,7 @@ public class MyHand : Module
         ---
 
         Notes: 
-        Normally used after SetFingerAlgorithm() function is completed 
+        Normally used after SetFingerAlgorithm() function is completed.
     */
     private void SetFingerAlgorithmReady(bool b)
     {
@@ -197,7 +203,7 @@ public class MyHand : Module
 
     /* 
         Function: SetOmittedDegrees
-        Saves the number of degrees that must be omitted in the movement of the fingers to avoid shaking
+        Saves the number of degrees that must be omitted in the movement of the fingers to avoid shaking.
 
         Parameters:
         nDegrees - Number of degrees that must be omitted in the movement of the fingers
@@ -208,7 +214,7 @@ public class MyHand : Module
         ---
 
         Notes:
-        Usually small values between 0 and 5 to keep fast response in simulation
+        Usually small values between 0 and 5 to keep fast response in simulation.
     */
     private void SetOmittedDegrees(int nDegrees)
     {
@@ -250,7 +256,10 @@ public class MyHand : Module
     public int SetHandTransform(Transform tHandObj, eModuleAxis ePitchAxis, eModuleAxis eYawAxis, eModuleAxis eRollAxis)
     {
         if (tHandObj == null)
+        {
+            TraceLog("Hand transform error");
             return -1;
+        }
 
         _tHand = tHandObj;
         _ePitchAxis = ePitchAxis;
@@ -305,11 +314,11 @@ public class MyHand : Module
             return -1;
         }
 
-        _taThumbChild = _taFinger[_nThumbPos].GetComponentsInChildren<Transform>();
-        _taIndexChild = _taFinger[_nIndexPos].GetComponentsInChildren<Transform>();
-        _taMiddleChild = _taFinger[_nMiddlePos].GetComponentsInChildren<Transform>();
-        _taRingChild = _taFinger[_nRingPos].GetComponentsInChildren<Transform>();
-        _taPinkyChild = _taFinger[_nPinkyPos].GetComponentsInChildren<Transform>();
+        _taThumbChild = tThumbObj.GetComponentsInChildren<Transform>();
+        _taIndexChild = tIndexObj.GetComponentsInChildren<Transform>();
+        _taMiddleChild = tMiddleObj.GetComponentsInChildren<Transform>();
+        _taRingChild = tRingObj.GetComponentsInChildren<Transform>();
+        _taPinkyChild = tPinkyObj.GetComponentsInChildren<Transform>();
 
         if (_taThumbChild.Length < nChildCnt ||
             _taIndexChild.Length < nChildCnt ||
@@ -317,8 +326,8 @@ public class MyHand : Module
             _taRingChild.Length < nChildCnt ||
             _taPinkyChild.Length < nChildCnt)
         {
-                TraceLog("Child transform error");
-                return -2;          
+            TraceLog("Child transform error");
+            return -2;          
         }
 
         _taFinger[_nThumbPos] = tThumbObj;
@@ -351,7 +360,7 @@ public class MyHand : Module
 
     /* 
         Function: SetFingerSensor
-        Saves the sensor ID assigned in Captoglove module to each finger
+        Saves the sensor ID assigned in Captoglove module to each finger.
 
         Parameters:
         nThumbSensor - Captoglove sensor ID for thumb finger
@@ -369,6 +378,7 @@ public class MyHand : Module
         Returns:
         0 - Success
         -1 - Error: Sensor ID error
+
         Notes:
         Sensor ID can be verified in Captoglove documentation. Usually a number between 1 and 10.
     */
@@ -399,10 +409,10 @@ public class MyHand : Module
 
     /* 
         Function: SetDefaultRotLimits
-        Set the limits for the rotation of the hand transform and each finger transform
+        Set the limits for the rotation of the hand transform and each finger transform.
 
         Notes: 
-        The values configured in this function are valid only for the hand model delivered with these libraries
+        The values configured in this function are valid only for the hand model delivered with these libraries.
     */
     private void SetDefaultRotLimits()
     {
@@ -436,7 +446,7 @@ public class MyHand : Module
 
     /* 
         Function: SetPitchLimits
-        Creates the algorithm for pitch movement of the hand 
+        Creates the algorithm for pitch movement of the hand. 
 
         Parameters:
         fMaxUpRotation - Angle of rotation where the hand is pointing upward in the pitch movement
@@ -448,7 +458,7 @@ public class MyHand : Module
         ---
 
         Notes: 
-        These rotation values must be set as they are read in Unity enviroment for the hand transform
+        These rotation values must be set as they are read in Unity enviroment for the hand transform.
     */
     private void SetPitchLimits(float fMaxUpRotation, float fMaxDownRotation)
     {
@@ -461,7 +471,7 @@ public class MyHand : Module
 
     /* 
         Function: SetYawLimits
-        Creates the algorithm for yaw movement of the hand 
+        Creates the algorithm for yaw movement of the hand. 
 
         Parameters:
         fMaxRightRotation - Angle of rotation where the hand is pointing to the right in the yaw movement
@@ -473,7 +483,7 @@ public class MyHand : Module
         ---
 
         Notes: 
-        These rotation values must be set as they are read in Unity enviroment for the hand transform
+        These rotation values must be set as they are read in Unity enviroment for the hand transform.
     */
     private void SetYawLimits(float fMaxRightRotation, float fMaxLeftRotation)
     {
@@ -486,7 +496,7 @@ public class MyHand : Module
 
     /* 
         Function: SetRollLimits
-        Creates the algorithm for roll movement of the hand 
+        Creates the algorithm for roll movement of the hand. 
 
         Parameters:
         fMaxRightRotation - Angle of rotation where the hand is face up after turning it to the right.
@@ -498,7 +508,7 @@ public class MyHand : Module
         ---
 
         Notes: 
-        These rotation values must be set as they are read in Unity enviroment for the hand transform
+        These rotation values must be set as they are read in Unity enviroment for the hand transform.
     */
     private void SetRollLimits(float fMaxRightRotation, float fMaxLeftRotation)
     {
@@ -511,7 +521,7 @@ public class MyHand : Module
 
     /* 
         Function: SetThumbRotLimits
-        Saves the rotation limits for the thumb finger transform
+        Saves the rotation limits for the thumb finger transform.
 
         Parameters:
         fMinRotation - Angle of rotation where the thumb finger is fully extended
@@ -527,7 +537,7 @@ public class MyHand : Module
         ---
 
         Notes: 
-        These rotation values must be set as they are read in Unity enviroment for the finger transform
+        These rotation values must be set as they are read in Unity enviroment for the finger transform.
     */
     private void SetThumbRotLimits(float fMinRotation, float fMaxRotation,
                                  float fMinRotation1, float fMaxRotation1,
@@ -545,7 +555,7 @@ public class MyHand : Module
 
     /* 
         Function: SetIndexRotLimits
-        Saves the rotation limits for the index finger transform
+        Saves the rotation limits for the index finger transform.
 
         Parameters:
         fMinRotation - Angle of rotation where the index finger is fully extended
@@ -561,7 +571,7 @@ public class MyHand : Module
         ---
 
         Notes: 
-        These rotation values must be set as they are read in Unity enviroment for the finger transform
+        These rotation values must be set as they are read in Unity enviroment for the finger transform.
     */
     private void SetIndexRotLimits(float fMinRotation, float fMaxRotation,
                                  float fMinRotation1, float fMaxRotation1,
@@ -579,7 +589,7 @@ public class MyHand : Module
 
     /* 
         Function: SetMiddleRotLimits
-        Saves the rotation limits for the middle finger transform
+        Saves the rotation limits for the middle finger transform.
 
         Parameters:
         fMinRotation - Angle of rotation where the middle finger is fully extended
@@ -595,7 +605,7 @@ public class MyHand : Module
         ---
         
         Notes: 
-        These rotation values must be set as they are read in Unity enviroment for the finger transform
+        These rotation values must be set as they are read in Unity enviroment for the finger transform.
     */
     private void SetMiddleRotLimits(float fMinRotation, float fMaxRotation,
                                   float fMinRotation1, float fMaxRotation1,
@@ -613,7 +623,7 @@ public class MyHand : Module
 
     /* 
         Function: SetRingRotLimits
-        Saves the rotation limits for the ring finger transform
+        Saves the rotation limits for the ring finger transform.
 
         Parameters:
         fMinRotation - Angle of rotation where the ring finger is fully extended
@@ -629,7 +639,7 @@ public class MyHand : Module
         ---
 
         Notes: 
-        These rotation values must be set as they are read in Unity enviroment for the finger transform
+        These rotation values must be set as they are read in Unity enviroment for the finger transform.
     */
     private void SetRingRotLimits(float fMinRotation, float fMaxRotation,
                                 float fMinRotation1, float fMaxRotation1,
@@ -647,7 +657,7 @@ public class MyHand : Module
 
     /* 
         Function: SetPinkyRotLimits
-        Saves the rotation limits for the pinky finger transform
+        Saves the rotation limits for the pinky finger transform.
 
         Parameters:
         fMinRotation - Angle of rotation where the pinky finger is fully extended
@@ -663,7 +673,7 @@ public class MyHand : Module
         ---
         
         Notes: 
-        These rotation values must be set as they are read in Unity enviroment for the finger transform
+        These rotation values must be set as they are read in Unity enviroment for the finger transform.
     */
     private void SetPinkyRotLimits(float fMinRotation, float fMaxRotation,
                                  float fMinRotation1, float fMaxRotation1,
@@ -684,12 +694,30 @@ public class MyHand : Module
         Updates hand transform rotation according with Captoglove module movement.
        
         Notes: 
-        Call this function in the Update() of your app to simulate hand movement
+        Call this function in the Update() of your app to simulate hand movement.
     */
     public void MoveHand()
     {
         if (GetModuleStarted())        
-            SetHandNewAngle();
+            SetHandNewAngle(true);
+
+        //If hand transform was assigned
+        if (_tHand != null)
+            _tHand.localEulerAngles = new Vector3(_fHandXAngle, _fHandYAngle, _fHandZAngle);
+    }
+
+    /* 
+        Function: MoveHandNoYaw
+        Updates hand transform rotation according with Captoglove module movement. Yaw movement is ommited.
+
+        Notes: 
+        Call this function in the Update() of your app to simulate hand movement.
+        Normally used when arm simulation is also running so the yaw movement is done by the arm.
+    */
+    public void MoveHandNoYaw()
+    {
+        if (GetModuleStarted())
+            SetHandNewAngle(false);
 
         //If hand transform was assigned
         if (_tHand != null)
@@ -698,9 +726,13 @@ public class MyHand : Module
 
     /* 
         Function: SetHandNewAngle
-        Calculates hand transform rotation according with Captoglove module movement.    
+        Calculates hand transform rotation according with Captoglove module movement.   
+    
+        Parameters:
+            bYaw - true or false to simulate yaw movement
+
     */
-    private void SetHandNewAngle()
+    private void SetHandNewAngle(bool bYaw)
     {
         var args = psEventTaredQuart as BoardQuaternionEventArgs;
         float pitchAngle;
@@ -708,16 +740,17 @@ public class MyHand : Module
         float rollAngle;
 
         if (args != null)
-        {
-            //TraceLog("- Stream Received : " + psEventTaredQuart.StreamType.ToString());
-
+        {   
             float quaternionX = args.Value.X;
             float quaternionY = args.Value.Y;
-            float quaternionZ = args.Value.Z;
+            float quaternionZ = args.Value.Z;          
 
             pitchAngle = quaternionX * _fPitchVarA + _fPitchVarB;
             yawAngle = quaternionY * _fYawVarA + _fYawVarB;
             rollAngle = quaternionZ * _fRollVarA + _fRollVarB;
+
+            if (!bYaw)
+                yawAngle = 0;
 
             /*
             //SetPitchRotation when hand is upside down TODO IMPROVE THIS MOVEMENT 
@@ -729,8 +762,9 @@ public class MyHand : Module
                 AsignAngle2Axes(yawAngle, pitchAngle, rollAngle);
             }
             else*/
-            {
+            {               
                 AsignAngle2Axes(pitchAngle, yawAngle, rollAngle);
+            
             }
         }
     }
@@ -786,14 +820,12 @@ public class MyHand : Module
         Updates each finger transform rotation according with Captoglove sensor movement.
 
         Notes: 
-        Call this function in the Update() of your app to simulate fingers movement
+        Call this function in the Update() of your app to simulate fingers movement.
     */
     public void MoveFingers()
     {
-        if (GetModuleStarted())
-        {
-            SetFingersNewAngle();
-        }
+        if (GetModuleStarted())        
+            SetFingersNewAngle();        
 
         //If finger transform was assigned
         if (_taFinger[_nThumbPos] != null)
@@ -864,11 +896,10 @@ public class MyHand : Module
 
     /* 
         Function: SetFingerAlgorithm
-        Creates algorithm for finger movement
+        Creates algorithm for finger movement.
     */
     private void SetFingerAlgorithm()
-    {
-        TraceLog("Get A and B ");
+    {        
         float num = 0f;
 
         for (int i = 0; i < 10; i++)
@@ -889,22 +920,70 @@ public class MyHand : Module
 
         //A and B are set correctly after the properties are read
         if (GetPropertiesRead())
-            SetFingerAlgorithmReady(true);            
+        {
+            TraceLog("Finger algorithm ready");
+            SetFingerAlgorithmReady(true);
+        }
     }
 
     /* 
-        Function: CatchObject
-        Attaches object transform to hand transform
-
-        Parameters:
-        tObject - Object transform
-
-        Notes: 
-        Call this function in the Update() of your app if you need an object to move together with the hand
+        Function: GetHandPosition
+        Returns:
+            Global position of hand transform
     */
-    public void CatchObject(Transform tObject)
+    public Vector3 GetHandPosition()
     {
-        tObject.position = _taFinger[_nMiddlePos].position;
+        return _tHand.position; 
+    }
+
+    /* 
+        Function: GetThumbPosition
+        Returns:
+            Global position of thumb finger transform
+    */
+    public Vector3 GetThumbPosition()
+    {
+        return _taFinger[_nThumbPos].position;
+    }
+
+    /* 
+        Function: GetIndexPosition
+        Returns:
+            Global position of index finger transform
+    */
+    public Vector3 GetIndexPosition()
+    {
+        return _taFinger[_nIndexPos].position;
+    }
+
+    /* 
+        Function: GetMiddlePosition
+        Returns:
+            Global position of middle finger transform
+    */
+    public Vector3 GetMiddlePosition()
+    {
+        return _taFinger[_nMiddlePos].position;
+    }
+
+    /* 
+        Function: GetRingPosition
+        Returns:
+            Global position of ring finger transform
+    */
+    public Vector3 GetRingPosition()
+    {
+        return _taFinger[_nRingPos].position;
+    }
+
+    /* 
+        Function: GetPinkyPosition
+        Returns:
+            Global position of pinky finger transform
+    */
+    public Vector3 GetPinkyPosition()
+    {
+        return _taFinger[_nPinkyPos].position;
     }
 
     /* 
@@ -1022,4 +1101,97 @@ public class MyHand : Module
 
         return bRet;
     }
+
+    /* 
+        Function: SaveHandMovInFile
+        Saves module data in file with following format: x hand rotation; y hand rotation; z hand rotation  
+
+        Parameters:
+            sFileName - File name
+        
+        Example:
+        --- Code
+        SaveHandMovInFile("RightHandMov.csv");
+        ---
+
+        Notes:
+        Call this function in Updated() of your app to save data continuously 
+    */
+    public void SaveHandMovInFile(string sFileName)
+    {
+        var args = psEventTaredQuart as BoardQuaternionEventArgs;
+        string serializedData;
+
+        if (args != null)
+        {
+            if (!bHandFile)
+            {
+                swHandWriter = new StreamWriter(sFileName, true);
+                bHandFile = true;
+            }
+
+            float quaternionX = args.Value.X;
+            float quaternionY = args.Value.Y;
+            float quaternionZ = args.Value.Z;
+      
+            serializedData =
+                quaternionX.ToString() + ";" + 
+                quaternionY.ToString() + ";" +
+                quaternionZ.ToString() + "\n"; 
+
+            // Write to disk
+            if(swHandWriter != null)
+                swHandWriter.Write(serializedData);           
+
+        }
+    }
+
+    /* 
+        Function: SaveFingerMovInFile
+        Saves sensor data in file with following format: thumb finger; index finger; middle finger; ring finger; pinky finger; pressure sensor
+
+        Parameters:
+            sFileName - File name
+
+        Example:
+        --- Code
+        SaveFingerMovInFile("RightFingerMov.csv");
+        ---
+
+        Notes:
+        Call this function in Updated() of your app to save data continuously 
+    */
+    public void SaveFingerMovInFile(string sFileName)
+    {
+        var args = psEventSensorState as BoardFloatSequenceEventArgs;
+        string serializedData;
+
+        if (args != null)
+        {
+            if (!bFingerFile)
+            {
+                swFingerWriter = new StreamWriter(sFileName, true);
+                bFingerFile = true;
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                _faSensorValue[i] = args.Value[i];                               
+            }
+
+            serializedData =
+                _faSensorValue[_nThumbPos].ToString() + ";" +
+                _faSensorValue[_nIndexPos].ToString() + ";" +
+                _faSensorValue[_nMiddlePos].ToString() + ";" +
+                _faSensorValue[_nRingPos].ToString() + ";" +
+                _faSensorValue[_nPinkyPos].ToString() + ";" +
+                _faSensorValue[_nPressurePos].ToString() + "\n";
+
+            // Write to disk
+            if (swFingerWriter != null)
+                swFingerWriter.Write(serializedData);
+
+        }
+    }
+
 }

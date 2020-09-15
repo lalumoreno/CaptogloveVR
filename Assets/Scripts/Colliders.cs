@@ -1,15 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Colliders : MonoBehaviour
 {
-    private Renderer capsuleRenderer;
+    private Renderer rCapsule;
 
     // Start is called before the first frame update
     void Start()
     {
-        capsuleRenderer = transform.GetComponent<Renderer>();
+        rCapsule = transform.GetComponent<Renderer>();
     }
 
     // Update is called once per frame
@@ -18,20 +16,15 @@ public class Colliders : MonoBehaviour
         
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(UnityEngine.Collider other)
     {
-        if (other.tag == "Player")
-        {
-            Debug.Log("OnTriggerEnter!!");
-            capsuleRenderer.material.SetColor("_Color", Color.red);
-        }
+        if (other.tag == "Player")                  
+            rCapsule.material.SetColor("_Color", Color.red);        
     }
 
-    private void OnTriggerExit(Collider other)
+    private void OnTriggerExit(UnityEngine.Collider other)
     {
-        if (other.tag == "Player")
-        {
-            capsuleRenderer.material.SetColor("_Color", Color.white);
-        }
+        if (other.tag == "Player")        
+            rCapsule.material.SetColor("_Color", Color.white);        
     }
 }
