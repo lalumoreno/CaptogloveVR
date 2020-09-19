@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using GITEICaptoglove;
 
 public class MainRightHand : MonoBehaviour
 {
@@ -11,27 +12,16 @@ public class MainRightHand : MonoBehaviour
     public Transform tPinky;
     public GameObject ArmObject; 
 
-    public Transform tButton;
-    public Transform tCapsule;
-    public Transform tLever;
-    public Transform tLigth;
+    public myButton button;    
+    public myLever lever;
+    public myLight mylight;
+    public myCapsule capsule;
 
-    private MyHand RightHand = null;
-
-    private Renderer rCapsule;
-    private Renderer rButton;
-    private Renderer rLever;
-    private Renderer rLigth;
-
-    private GUIStyle style;    
-
-    private bool bCapsule = false;
-    private bool bLight = false;
-    private bool bLever = false;
-    private bool bButton = false;
+    private MyHand RightHand = null;     
+    private GUIStyle style;      
 
     //Enables-Disables arm in Unity Editor
-    public bool UseArm = false;  
+    public bool UseArm = false;
 
     // Start is called before the first frame update
     void Start()
@@ -47,12 +37,6 @@ public class MainRightHand : MonoBehaviour
             ArmObject.GetComponent<MainRightArm>().enabled = true; 
         else
             ArmObject.GetComponent<MainRightArm>().enabled = false;
-
-        //Handles objects color
-        rCapsule = tCapsule.GetComponent<Renderer>();
-        rButton = tButton.GetComponent<Renderer>();
-        rLever = tLever.GetComponent<Renderer>();
-        rLigth = tLigth.GetComponent<Renderer>();
 
         //Messages in display
         style = new GUIStyle();
@@ -72,131 +56,67 @@ public class MainRightHand : MonoBehaviour
             RightHand.MoveHand();
 
         //Enables finger movement
-        RightHand.MoveFingers();
-        
+        RightHand.MoveFingers();        
+
         //Interaction with capsule 
-        if (RightHand.IsHandClosed() && bCapsule)
+        if (RightHand.IsHandClosed() && capsule.bCollided)
         {                      
             CatchCapsule();
         }
-        //Interaction with Lever
-        else if (RightHand.IsHandClosed() && bLever)
+        //Interaction with myLever
+        else if (RightHand.IsHandClosed() && lever.bCollided)
         {
             CatchLever();
         }
-        //Ineraction with light
-        else if (RightHand.FingerGesture1() && bLight) 
+        //Ineraction with mylight
+        else if (RightHand.FingerGesture1() && mylight.bCollided) 
 		{
-			rLigth.material.SetColor("_Color", Color.red);
-		}
-        //Ineraction with light
-        else if (RightHand.FingerGesture2() && bLight)
+            mylight.cColor = Color.blue;            
+		}        
+        else if (RightHand.FingerGesture2() && mylight.bCollided)
 		{
-			rLigth.material.SetColor("_Color", Color.yellow);
-		}
-        //Ineraction with light
-        else if (RightHand.FingerGesture3() && bLight)
+            mylight.cColor = Color.yellow;            
+        }        
+        else if (RightHand.FingerGesture3() && mylight.bCollided)
 		{
-			rLigth.material.SetColor("_Color", Color.green);
-		}
+            mylight.cColor = Color.green;            
+        }
         //Ineraction with button
-        else if (RightHand.IsSensorPressed() && bButton)
-		{			
-			PressButton(true);
-		}
+        else if (RightHand.IsSensorPressed() && button.bCollided)                
+        {
+            button.PressButton();
+        }
 		else if (!RightHand.IsSensorPressed())
 		{
-            PressButton(false);
-		}
+            button.ReleaseButton();
+        }
 
     }
 
     private void CatchCapsule()
     {
-        tCapsule.position = RightHand.GetMiddlePosition(); 
+        Vector3 vMiddlePos = RightHand.GetMiddlePosition();
+        capsule.ChangePosition(new Vector3(vMiddlePos.x, vMiddlePos.y, vMiddlePos.z + 1));
+        capsule.ChangeRotation(RightHand.GetHandRotation());        
     }
 
     private void CatchLever()
     {
         Vector3 vHandPos = RightHand.GetHandPosition();
 
-        if ((vHandPos.y - 2) > 7.5f &&
-            (vHandPos.y - 2) < 12f)
+        if ((vHandPos.y - 1) > 7.5f &&
+            (vHandPos.y - 1) < 12f)
         {
-            tLever.position = new Vector3(tLever.position.x, vHandPos.y - 2, tLever.position.z);
+            lever.ChangePosition( vHandPos.y - 1);
         }
-    }
-
-    private void PressButton(bool b)
-    {
-        if (b)
-            tButton.position = new Vector3(-11.88f, 9, 20.06f);
-        else
-            tButton.position = new Vector3(-11.88f, 9, 19.48f);
-    }
-
-    private void OnTriggerEnter(UnityEngine.Collider other)
-    {
-        if (other.tag == "Capsule")
-        {
-            Debug.Log("Capsule OnTriggerEnter!!");
-            rCapsule.material.SetColor("_Color", Color.green);
-            bCapsule = true;
-        }
-        else if (other.tag == "Button")
-        {
-            Debug.Log("Button OnTriggerEnter!!");
-            rButton.material.SetColor("_Color", Color.green);
-            bButton = true; 
-        }
-        else if (other.tag == "Lever")
-        {
-            Debug.Log("Lever OnTriggerEnter!!");
-            rLever.material.SetColor("_Color", Color.green);
-            bLever = true;
-        }
-        else if (other.tag == "Light")
-        {
-            Debug.Log("Light OnTriggerEnter!!");
-            bLight = true;           
-        }
-    }
-
-    private void OnTriggerExit(UnityEngine.Collider other)
-    {
-        if (other.tag == "Capsule")
-        {
-            rCapsule.material.SetColor("_Color", Color.red);
-            bCapsule = false;
-        }
-        else if (other.tag == "Button")
-        {            
-            rButton.material.SetColor("_Color", Color.red);
-            bButton = false;
-        }
-        else if (other.tag == "Lever")
-        {            
-            rLever.material.SetColor("_Color", Color.red);
-            bLever = false;
-        }
-        else if (other.tag == "Light")
-        {            
-            bLight = false;
-        }
-
     }
 
     void OnGUI()
-    {
-        /*
+    {        
         if (RightHand.GetPropertiesRead())
         {
-            GUI.Label(new Rect(0, 0, 200f, 200f), "Right Hand ready", style);
+            GUI.Label(new Rect(Screen.width-100, 0, 200f, 200f), "Right Hand ready", style);
         }
-        if (blights)
-        {
-            GUI.Label(new Rect(0, 40f, 200f, 200f), "Light box", style);
-        }*/
     }
 
     private void OnDestroy()

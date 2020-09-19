@@ -7,12 +7,13 @@ public class VRCamera : MonoBehaviour
     public Transform tObject2;
 
     private Vector3 vCameraPos, vObject1Pos, vObject2Pos;
+    private Vector3 vCameraRot;
     private float fStep;
 
     // Start is called before the first frame update
     void Start()
     {
-        fStep = 0.3f;
+        fStep = 0.2f;
     }
 
     // Update is called once per frame
@@ -22,44 +23,80 @@ public class VRCamera : MonoBehaviour
         vObject1Pos = tObject1.localPosition;
         vObject2Pos = tObject2.localPosition;
 
+        vCameraRot = tCamera.localEulerAngles;
+
         if (Input.GetKey(KeyCode.W))
-        {                
-            vCameraPos.z = vCameraPos.z + fStep;
-            vObject1Pos.z = vObject1Pos.z + fStep;
-            vObject2Pos.z = vObject2Pos.z + fStep;
-        }
-        if (Input.GetKey(KeyCode.S))
         {
-            vCameraPos.z = vCameraPos.z - fStep;
-            vObject1Pos.z = vObject1Pos.z - fStep;
-            vObject2Pos.z = vObject2Pos.z - fStep;
+            if (vCameraPos.z < 15)
+            {
+                vCameraPos.z += fStep;
+                vObject1Pos.z += fStep;
+                vObject2Pos.z += fStep;
+            }
         }
-        if (Input.GetKey(KeyCode.D))
+        else if (Input.GetKey(KeyCode.S))
         {
-            vCameraPos.x = vCameraPos.x + fStep;
-            vObject1Pos.x = vObject1Pos.x + fStep;
-            vObject2Pos.x = vObject2Pos.x + fStep;
+            if (vCameraPos.z > -13)
+            {
+                vCameraPos.z -= fStep;
+                vObject1Pos.z -= fStep;
+                vObject2Pos.z -= fStep;
+            }
         }
-        if (Input.GetKey(KeyCode.A))
+        else if (Input.GetKey(KeyCode.D))
         {
-            vCameraPos.x = vCameraPos.x - fStep;
-            vObject1Pos.x = vObject1Pos.x - fStep;
-            vObject2Pos.x = vObject2Pos.x - fStep;
+            if (vCameraPos.x < 16)
+            {
+                vCameraPos.x += fStep;
+                vObject1Pos.x += fStep;
+                vObject2Pos.x += fStep;
+            }
         }
-        if (Input.GetKey(KeyCode.Q))
+        else if (Input.GetKey(KeyCode.A))
         {
-            vCameraPos.y = vCameraPos.y + fStep;
-            vObject1Pos.y = vObject1Pos.y + fStep;
-            vObject2Pos.y = vObject2Pos.y + fStep;
+            if (vCameraPos.x > -14.5)
+            {
+                vCameraPos.x -= fStep;
+                vObject1Pos.x -= fStep;
+                vObject2Pos.x -= fStep;
+            }
         }
-        if (Input.GetKey(KeyCode.E))
+        else if (Input.GetKey(KeyCode.E))
         {
-            vCameraPos.y = vCameraPos.y - fStep;
-            vObject1Pos.y = vObject1Pos.y - fStep;
-            vObject2Pos.y = vObject2Pos.y - fStep;
+            if (vCameraPos.y < 22)
+            {
+                vCameraPos.y += fStep;
+                vObject1Pos.y += fStep;
+                vObject2Pos.y += fStep;
+            }
         }
+        else if (Input.GetKey(KeyCode.Q))
+        {
+            if (vCameraPos.y > 5.6)
+            {
+                vCameraPos.y -= fStep;
+                vObject1Pos.y -= fStep;
+                vObject2Pos.y -= fStep;
+            }
+        }
+        else if(Input.GetKey(KeyCode.R))
+        {
+            //if(vCameraRot.x > -119f)
+            {
+                vCameraRot.x -= fStep;                
+            }
+        }
+        else if (Input.GetKey(KeyCode.F))
+        {
+            //if (vCameraRot.x < -132f)
+            {
+                vCameraRot.x += fStep;                
+            }
+        }
+
         tCamera.localPosition = vCameraPos;
         tObject1.localPosition = vObject1Pos;
         tObject2.localPosition = vObject2Pos;
+        tCamera.localEulerAngles = new Vector3(vCameraRot.x, vCameraRot.y, vCameraRot.z);
     }
 }
