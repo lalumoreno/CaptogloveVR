@@ -27,7 +27,7 @@ public class VRCamera : MonoBehaviour
 
         if (Input.GetKey(KeyCode.W))
         {
-            if (vCameraPos.z < 15)
+            if (vCameraPos.z < 18)
             {
                 vCameraPos.z += fStep;
                 vObject1Pos.z += fStep;

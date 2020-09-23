@@ -3,7 +3,6 @@ using GITEICaptoglove;
 
 public class MainRightArm : MonoBehaviour
 {
-	public Transform tArm;
 	private MyArm RightArm = null;
 	private GUIStyle style;
 
@@ -12,7 +11,7 @@ public class MainRightArm : MonoBehaviour
 	{		
 		RightArm = new MyArm(2502, MyArm.eArmType.TYPE_RIGHT_FOREARM);
 		RightArm.EnableLog();
-		RightArm.SetArmTransform(tArm, Module.eModuleAxis.AXIS_Y, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_X);
+		RightArm.SetArmTransform(transform, Module.eModuleAxis.AXIS_Y, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_X);
 
 		//Messages in display
 		style = new GUIStyle();

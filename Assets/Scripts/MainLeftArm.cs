@@ -3,7 +3,6 @@ using GITEICaptoglove;
 
 public class MainLeftArm : MonoBehaviour
 {
-    public Transform tArm;
     private MyArm LeftArm = null;
     private GUIStyle style;
 
@@ -13,7 +12,7 @@ public class MainLeftArm : MonoBehaviour
         //Configuration for Captoglove sensor as Left Arm
         LeftArm = new MyArm(2469, MyArm.eArmType.TYPE_LEFT_FOREARM);
         LeftArm.EnableLog();
-        LeftArm.SetArmTransform(tArm, Module.eModuleAxis.AXIS_Y, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_X);
+        LeftArm.SetArmTransform(transform, Module.eModuleAxis.AXIS_Y, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_X);
         LeftArm.SetInitialArmRot(180,0,90);
 
         //Messages in display

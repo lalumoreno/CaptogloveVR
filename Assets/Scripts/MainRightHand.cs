@@ -3,8 +3,7 @@ using GITEICaptoglove;
 
 public class MainRightHand : MonoBehaviour
 {
-    //Assign transforms in Unity editor
-    public Transform tHand;    
+    //Assign transforms in Unity editor      
     public Transform tThumb;
     public Transform tIndex;
     public Transform tMiddle;
@@ -29,7 +28,7 @@ public class MainRightHand : MonoBehaviour
         //Configuration for Captoglove sensor as Right Hand 
         RightHand = new MyHand(2443, MyHand.eHandType.TYPE_RIGHT_HAND);
         RightHand.EnableLog();
-        RightHand.SetHandTransform(tHand, Module.eModuleAxis.AXIS_X, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_Y);
+        RightHand.SetHandTransform(transform, Module.eModuleAxis.AXIS_X, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_Y);
         RightHand.SetFingerTransform(tThumb, tIndex, tMiddle, tRing, tPinky);
 
         //Needed to enable Captoglove sensor as Right Arm
