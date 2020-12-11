@@ -24,10 +24,10 @@ public class MainLeftHand : MonoBehaviour
 	void Start()
 	{
 		//Configuration for Captoglove sensor as Left Arm
-		LeftHand = new  MyHand(2492, MyHand.eHandType.TYPE_LEFT_HAND);
-		LeftHand.EnableLog();
-		LeftHand.SetHandTransform(transform, Module.eModuleAxis.AXIS_X, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_Y); //pitch, yaw, roll
-		LeftHand.SetFingerTransform(tThumb,tIndex,tMiddle,tRing, tPinky);
+		LeftHand = new  MyHand(2492, MyHand.HandType.TYPE_LEFT_HAND);
+		LeftHand.SetLogEnabled(true);
+		LeftHand.SetHandObject(transform);
+		LeftHand.SetFingerObject(tThumb,tIndex,tMiddle,tRing, tPinky);
 
 		//Needed to enable Captoglove sensor as Left Arm
 		if (UseArm)
@@ -56,19 +56,20 @@ public class MainLeftHand : MonoBehaviour
 		LeftHand.MoveFingers();
 
 		//Interaction with capsule 
-		if (LeftHand.IsHandClosed() && capsule.bCollided)
+		if (LeftHand.HandClosed() && capsule.bCollided)
 		{
 			CatchCapsule();
 		}
-		//Ineraction with button
-		else if (LeftHand.IsSensorPressed() && button.bCollided)
+		//Interaction with button
+		/*
+		else if (LeftHand.SensorPressed() && button.bCollided)
 		{
 			button.PressButton();
 		}
-		else if (!LeftHand.IsSensorPressed())
+		else if (!LeftHand.SensorPressed())
 		{
 			button.ReleaseButton();
-		}
+		}*/
 
 	}
 	private void CatchCapsule()

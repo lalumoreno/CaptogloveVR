@@ -25,11 +25,11 @@ public class MainRightHand : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //Configuration for Captoglove sensor as Right Hand 
-        RightHand = new MyHand(2443, MyHand.eHandType.TYPE_RIGHT_HAND);
-        RightHand.EnableLog();
-        RightHand.SetHandTransform(transform, Module.eModuleAxis.AXIS_X, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_Y);
-        RightHand.SetFingerTransform(tThumb, tIndex, tMiddle, tRing, tPinky);
+        //Add CaptoGlove module as right hand sensor
+        RightHand = new MyHand(2443, MyHand.HandType.TYPE_RIGHT_HAND);
+        RightHand.SetLogEnabled(true);
+        RightHand.SetHandObject(transform);
+        RightHand.SetFingerObject(tThumb, tIndex, tMiddle, tRing, tPinky);
 
         //Needed to enable Captoglove sensor as Right Arm
         if (UseArm)
@@ -58,12 +58,12 @@ public class MainRightHand : MonoBehaviour
         RightHand.MoveFingers();        
 
         //Interaction with capsule 
-        if (RightHand.IsHandClosed() && capsule.bCollided)
+        if (RightHand.HandClosed() && capsule.bCollided)
         {                      
             CatchCapsule();
         }
         //Interaction with myLever
-        else if (RightHand.IsHandClosed() && lever.bCollided)
+        else if (RightHand.HandClosed() && lever.bCollided)
         {
             CatchLever();
         }
@@ -81,11 +81,11 @@ public class MainRightHand : MonoBehaviour
             mylight.cColor = Color.green;            
         }
         //Ineraction with button
-        else if (RightHand.IsSensorPressed() && button.bCollided)                
+        else if (RightHand.SensorPressed() && button.bCollided)                
         {
             button.PressButton();
         }
-		else if (!RightHand.IsSensorPressed())
+		else if (!RightHand.SensorPressed())
 		{
             button.ReleaseButton();
         }

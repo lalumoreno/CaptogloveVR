@@ -9,9 +9,9 @@ public class MainRightArm : MonoBehaviour
 	// Start is called before the first frame update
 	void Start()
 	{		
-		RightArm = new MyArm(2502, MyArm.eArmType.TYPE_RIGHT_FOREARM);
-		RightArm.EnableLog();
-		RightArm.SetArmTransform(transform, Module.eModuleAxis.AXIS_Y, Module.eModuleAxis.AXIS_Z, Module.eModuleAxis.AXIS_X);
+		RightArm = new MyArm(2502, MyArm.ArmType.TYPE_RIGHT_FOREARM);
+		RightArm.SetLogEnabled(true);
+		RightArm.SetArmObject(transform);
 
 		//Messages in display
 		style = new GUIStyle();
